@@ -4,6 +4,8 @@ import inspect
 from lib.fuzzingbook.ControlFlow import gen_cfg, to_graph
 from graphviz import Source
 
+from tests import test
+
 
 def fib(n,):
     l = [0, 1]
@@ -11,14 +13,22 @@ def fib(n,):
         l.append(l[-1]+l[-2])
     return l
 
-ast_node = ast.parse(inspect.getsource(fib))
+ast_node = ast.parse(inspect.getsource(test))
 
 class RewriteName(ast.NodeTransformer):
 
-    def visit_FunctionDef(self, node):
-        node.name = 'bob'
+    def visit_Assign(self, node):
+        prev = None
+        for target in node.targets:
+            if isinstance(target, ast.Attribute) and isinstance(node.value, ast.Attribute) and prev is None:
+                newName = node.value.attr + "1"
+                prev = ast.Assign([ast.Name(newName, ast.Store)], node.value)
         self.generic_visit(node)
-        return node
+        if prev is None:
+            return node
+        else:
+            node.value = ast.Name(newName, ast.Load)
+            return [prev, node]
 
 ast_node = RewriteName().visit(ast_node)
 
