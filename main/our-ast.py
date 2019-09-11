@@ -35,3 +35,8 @@ ast_node = RewriteName().visit(ast_node)
 graph = to_graph(gen_cfg("", ast_node=ast_node))
 
 Source(graph).save()
+
+(x.r).r
+
+y = x
+y.r
