@@ -7,17 +7,19 @@ from lib.fuzzingbook.ControlFlow import gen_cfg, to_graph
 from graphviz import Source
 
 
-def fib(n,):
+def fib(n, ):
     l = [0, 1]
-    for i in range(n-2):
-        l.append(l[-1]+l[-2])
+    for i in range(n - 2):
+        l.append(l[-1] + l[-2])
     return l
+
 
 f = open("../tests/fib.py", "r")
 contents = f.read()
 
-#ast_node = ast.parse(inspect.getsource(fib))
+# ast_node = ast.parse(inspect.getsource(fib))
 ast_node = ast.parse(contents)
+
 
 class RewriteName(ast.NodeTransformer):
     def __init__(self) -> None:
@@ -26,21 +28,21 @@ class RewriteName(ast.NodeTransformer):
         self.new_stmts = []
 
     def unique_name(self):
-        return "name{}".format(self.unique_number())BoolOp
+        return "name{}".format(self.unique_number())
+        BoolOp
 
     def unique_number(self):
         self.unique += 1
         return self.unique
 
     def visit_Assign(self, node):
-        value_nodes = self.visit(node.value)
-        if isinstance(value_nodes, [].__class__) and len(value_nodes) > 1:
-            new_node = ast.Assign(node.targets, value_nodes.pop())
-            value_nodes.append(ast.copy_location(new_node, node))
-            return value_nodes
+        new_node = self.generic_visit(node)
+        if (len(self.new_stmts) > 0):
+            return_list = self.new_stmts + [new_node]
+            self.new_stmts.clear()
+            return return_list
         else:
-            new_node = ast.Assign(node.targets, value_nodes)
-            return ast.copy_location(new_node, node)
+            return new_node
 
     def visit_Attribute(self, node):
         sub_node = self.visit(node.value)
@@ -48,9 +50,10 @@ class RewriteName(ast.NodeTransformer):
             return ast.copy_location(ast.Attribute(sub_node, node.attr, node.ctx), node)
         else:
             new_name = ast.copy_location(ast.Name(self.unique_name(), ast.Store), sub_node)
-            self.new_stmts.append(ast.copy_location(ast.Assign([new_name],sub_node),sub_node))
-            return ast.copy_location(ast.Attribute(new_name,node.attr, node.ctx), node)
+            self.new_stmts.append(ast.copy_location(ast.Assign([new_name], sub_node), sub_node))
+            return ast.copy_location(ast.Attribute(new_name, node.attr, node.ctx), node)
 
+    def visit_FunctionDef(self, node):
 
 
 ast_node = RewriteName().visit(ast_node)
