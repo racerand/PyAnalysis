@@ -41,22 +41,15 @@ class RewriteName(ast.NodeTransformer):
         else:
             new_node = ast.Assign(node.targets, value_nodes)
             return ast.copy_location(new_node, node)
+
     def visit_Attribute(self, node):
-        sub_nodes = self.visit(node.value)
-        if isinstance(sub_nodes, list):
-            last_node = sub_nodes.pop()
-            sub_nodes.extend(self.split_attribute(node, last_node))
-            return sub_nodes
+        sub_node = self.visit(node.value)
+        if isinstance(sub_node, ast.Name):
+            return ast.copy_location(ast.Attribute(sub_node, node.attr, node.ctx), node)
         else:
-            return self.split_attribute(node, sub_nodes)
-    def split_attribute(self, node, sub_node):
-        if isinstance(sub_node, ast.Attribute):
-            prev_name = ast.copy_location(ast.Name(self.unique_name(), sub_node.ctx), sub_node)
-            prev_node = ast.copy_location(ast.Assign([prev_name], sub_node), sub_node)
-            new_attr = ast.copy_location(ast.Attribute(prev_name, node.attr, node.ctx), node)
-            return [prev_node, new_attr]
-        else:
-            return [ast.copy_location(ast.Attribute(sub_node, node.attr, node.ctx), node)]
+            new_name = ast.copy_location(ast.Name(self.unique_name(), ast.Store), sub_node)
+            self.new_stmts.append(ast.copy_location(ast.Assign([new_name],sub_node),sub_node))
+            return ast.copy_location(ast.Attribute(new_name,node.attr, node.ctx), node)
 
 
 
