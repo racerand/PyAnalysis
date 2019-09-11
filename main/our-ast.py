@@ -72,21 +72,30 @@ class RewriteName(ast.NodeTransformer):
             new_values.append(value)
         return new_values
 
+    def if_exists(self, node, func):
+        if node:
+            return func(node)
 
-def visit_FunctionDef(self, node):
-    new_body = self.visit_list(node.body)
-    new_return = self.visit(node.returns)
-    if new_body:
-        new_body.extend(self.new_stmts)
-    else:
-        new_body = self.new_stmts
-    self.new_stmts.clear()
-    new_args = self.visit(node.args)
-    new_decorator = self.visit_list(node.decorator_list)
-    return_list = self.new_stmts + [ast.copy_location(
-        ast.FunctionDef(node.name, new_args, new_body, new_decorator, new_return, node.type_comment), node)]
-    self.new_stmts.clear()
-    return return_list
+    def visit_FunctionDef(self, node):
+        new_body = self.if_exists(node.body, self.visit_list)
+        new_return = self.if_exists(node.returns, self.visit)
+        if new_body:
+            new_body.extend(self.new_stmts)
+        else:
+            new_body = self.new_stmts
+        self.new_stmts.clear()
+        new_args = self.visit(node.args)
+        new_decorator = self.if_exists(node.decorator_list, self.visit_list)
+        return_list = self.new_stmts + [ast.copy_location(
+            ast.FunctionDef(node.name, new_args, new_body, new_decorator, new_return), node)]
+        self.new_stmts.clear()
+        return return_list
+
+    def visit_AsyncFunctionDef(self, node):
+        self.visit_FunctionDef(node)
+
+    def vist_ClassDef(self,node):
+
 
 
 ast_node = RewriteName().visit(ast_node)

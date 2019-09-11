@@ -12,9 +12,11 @@ digraph {
 	4 -> 5
 	6 [label="11: x.snd = name3.snd" peripheries=1 shape=rectangle]
 	5 -> 6
-	7 [label="13: enter: foo(x)" peripheries=2 shape=oval]
-	8 [label="13: exit: foo(x)" peripheries=2 shape=oval]
-	9 -> 8
-	9 [label="14: return x" peripheries=1 shape=rectangle]
-	7 -> 9
+	7 [label="13: name4 = y.fst" peripheries=1 shape=rectangle]
+	6 -> 7
+	8 [label="13: enter: foo(x)" peripheries=2 shape=oval]
+	9 [label="13: exit: foo(x)" peripheries=2 shape=oval]
+	10 -> 9
+	10 [label="14: return x" peripheries=1 shape=rectangle]
+	8 -> 10
 }
