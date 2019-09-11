@@ -29,7 +29,6 @@ class RewriteName(ast.NodeTransformer):
 
     def unique_name(self):
         return "name{}".format(self.unique_number())
-        BoolOp
 
     def unique_number(self):
         self.unique += 1
@@ -53,7 +52,41 @@ class RewriteName(ast.NodeTransformer):
             self.new_stmts.append(ast.copy_location(ast.Assign([new_name], sub_node), sub_node))
             return ast.copy_location(ast.Attribute(new_name, node.attr, node.ctx), node)
 
-    def visit_FunctionDef(self, node):
+    def generic_stmt_visit(self, node, func):
+        new_node = self.generic_visit(node)
+        if (len(self.new_stmts) > 0):
+            return func(self, node)
+        else:
+            return new_node
+
+    def visit_list(self, old_value):
+        new_values = []
+        for value in old_value:
+            if isinstance(value, ast.AST):
+                value = self.visit(value)
+                if value is None:
+                    continue
+                elif not isinstance(value, ast.AST):
+                    new_values.extend(value)
+                    continue
+            new_values.append(value)
+        return new_values
+
+
+def visit_FunctionDef(self, node):
+    new_body = self.visit_list(node.body)
+    new_return = self.visit(node.returns)
+    if new_body:
+        new_body.extend(self.new_stmts)
+    else:
+        new_body = self.new_stmts
+    self.new_stmts.clear()
+    new_args = self.visit(node.args)
+    new_decorator = self.visit_list(node.decorator_list)
+    return_list = self.new_stmts + [ast.copy_location(
+        ast.FunctionDef(node.name, new_args, new_body, new_decorator, new_return, node.type_comment), node)]
+    self.new_stmts.clear()
+    return return_list
 
 
 ast_node = RewriteName().visit(ast_node)
