@@ -1,9 +1,18 @@
 // Control Flow Graph
 digraph {
-	1 [label="9: x = Fib(1, 2)" peripheries=1 shape=rectangle]
+	1 [label="8: x = Fib(1, 2)" peripheries=1 shape=rectangle]
 	0 -> 1
-	2 [label="10: y = Fib(x, 2)" peripheries=1 shape=rectangle]
+	2 [label="9: y = Fib(x, 2)" peripheries=1 shape=rectangle]
 	1 -> 2
-	3 [label="11: x.fst = y.fst.snd" peripheries=1 shape=rectangle]
+	3 [label="10: x.fst = y" peripheries=1 shape=rectangle]
 	2 -> 3
+	4 [label="11: name1 = y.fst" peripheries=1 shape=rectangle]
+	3 -> 4
+	5 [label="11: name2 = name1.fst" peripheries=1 shape=rectangle]
+	4 -> 5
+	6 [label="11: x.snd = name2.snd" peripheries=1 shape=rectangle]
+	5 -> 6
+	7 [label="13: z = 
+name3 = x.fst, name3.snd, y.snd" peripheries=1 shape=rectangle]
+	6 -> 7
 }

@@ -5,7 +5,9 @@ class Fib:
         self.fst = fst
         self.snd = snd
 
-
 x = Fib(1, 2)
 y = Fib(x, 2)
-x.fst = y.fst.snd
+x.fst = y
+x.snd = y.fst.fst.snd
+
+z = (x.fst.snd, y.snd)
