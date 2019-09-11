@@ -76,6 +76,8 @@ class RewriteName(ast.NodeTransformer):
         if node:
             return func(node)
 
+## Stmt
+
     def visit_FunctionDef(self, node):
         new_body = self.if_exists(node.body, self.visit_list)
         new_return = self.if_exists(node.returns, self.visit)
@@ -94,7 +96,19 @@ class RewriteName(ast.NodeTransformer):
     def visit_AsyncFunctionDef(self, node):
         self.visit_FunctionDef(node)
 
-    def vist_ClassDef(self,node):
+    # def vist_ClassDef(self,node):
+
+    def visit_Return(self, node):
+        if node.value:
+            new_value = self.visit(node.value)
+            new_node = ast.copy_location(ast.Return(new_value), node)
+            if len(self.new_stmts) > 0:
+                return_list = self.new_stmts + [new_node]
+                self.new_stmts.clear()
+                return return_list
+            return new_node
+
+        return node
 
 
 

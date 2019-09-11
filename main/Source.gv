@@ -6,17 +6,19 @@ digraph {
 	1 -> 2
 	3 [label="10: x.fst = y" peripheries=1 shape=rectangle]
 	2 -> 3
-	4 [label="11: name2 = y.fst" peripheries=1 shape=rectangle]
+	4 [label="11: name2 = x.fst" peripheries=1 shape=rectangle]
 	3 -> 4
-	5 [label="11: name3 = name2.fst" peripheries=1 shape=rectangle]
+	5 [label="11: name3 = y.fst" peripheries=1 shape=rectangle]
 	4 -> 5
-	6 [label="11: x.snd = name3.snd" peripheries=1 shape=rectangle]
+	6 [label="11: name4 = name3.fst" peripheries=1 shape=rectangle]
 	5 -> 6
-	7 [label="13: name4 = y.fst" peripheries=1 shape=rectangle]
+	7 [label="11: name2.snd = name4.snd" peripheries=1 shape=rectangle]
 	6 -> 7
 	8 [label="13: enter: foo(x)" peripheries=2 shape=oval]
 	9 [label="13: exit: foo(x)" peripheries=2 shape=oval]
-	10 -> 9
-	10 [label="14: return x" peripheries=1 shape=rectangle]
+	11 -> 9
+	10 [label="14: name5 = x.fst" peripheries=1 shape=rectangle]
 	8 -> 10
+	11 [label="14: return name5.snd" peripheries=1 shape=rectangle]
+	10 -> 11
 }

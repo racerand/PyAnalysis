@@ -8,7 +8,7 @@ class Fib:
 x = Fib(1, 2)
 y = Fib(x, 2)
 x.fst = y
-x.snd = y.fst.fst.snd
+x.fst.snd = y.fst.fst.snd
 
-def foo(x = y.fst.snd):
-    return x
+def foo(x = y):
+    return x.fst.snd
