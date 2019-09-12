@@ -14,5 +14,14 @@ def foo(x = y):
 
 foo(x)
 
-with open("our-ast.py", mode='r') as fib:
-    x.fst.fst.snd = 0
+#x.fst.fst.snd = NameError
+
+#with open("our-ast.py", mode='r') as fib:
+#    x.fst.fst.snd = 0
+
+
+#try:
+#    ast = open("our-ast.py", mode='r')
+#    ast.read()
+#except NameError: #x.fst.fst.snd:
+#    print("hey")

@@ -86,10 +86,47 @@ class RewriteName(ast.NodeTransformer):
 
     def visit_With(self, node):
         new_body = self.if_exists(node.body, self.visit_list)
-        new_withItems = self.if_exists(node.items, self.visit_list)
-        return_list = self.new_stmts + [ast.copy_location(ast.With(new_withItems, new_body), node)]
+        new_with_items = self.if_exists(node.items, self.visit_list)
+        return_list = self.new_stmts + [ast.copy_location(ast.With(new_with_items, new_body), node)]
         self.new_stmts.clear()
         return return_list
+
+    def visit_AsyncWith(self, node):
+        new_body = self.if_exists(node.body, self.visit_list)
+        new_with_items = self.if_exists(node.items, self.visit_list)
+        return_list = self.new_stmts + [ast.copy_location(ast.AsyncWith(new_with_items, new_body), node)]
+        self.new_stmts.clear()
+        return return_list
+
+    def visit_Raise(self,node):
+        return self.generic_stmt_visit(node)
+
+    # Excepthandler might be a bit tricky
+    def visit_Try(self, node):
+        pre_nodes = []
+        expt_handlers = []
+        for expt_handler in node.handlers:
+            new_body = self.if_exists(expt_handler.body, self.visit_list)
+            new_type = self.if_exists(expt_handler.type, self.visit)
+            pre_nodes += self.new_stmts
+            self.new_stmts.clear()
+            new_handler = ast.copy_location(ast.excepthandler(type=new_type, name=expt_handler.name, body=new_body), expt_handler)
+            expt_handlers.append(new_handler)
+        new_body = self.if_exists(node.body, self.visit_list)
+        new_orelse = self.if_exists(node.orelse, self.visit_list)
+        new_final_body = self.if_exists(node.finalbody, self.visit_list)
+        new_try = ast.copy_location(ast.Try(new_body, expt_handlers, new_orelse, new_final_body), node)
+        # return the new nodes before the try, since these should not be run inside the try where they could be skipped
+        return pre_nodes + [new_try]
+
+
+    def visit_Assert(self, node):
+        return self.generic_stmt_visit(node)
+
+    # Import and ImportFrom only contains non stmt and expr
+
+    def visit_Expr(self, node):
+        return self.generic_stmt_visit(node)
 
     def visit_Attribute(self, node):
         sub_node = self.visit(node.value)
@@ -173,5 +210,7 @@ class RewriteName(ast.NodeTransformer):
 ast_node = RewriteName().visit(ast_node)
 
 graph = to_graph(gen_cfg("", ast_node=ast_node))
+
+# to_graph does not like Try and error names
 
 Source(graph).save()
