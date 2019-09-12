@@ -47,8 +47,8 @@ class RewriteName(ast.NodeTransformer):
         return self.generic_stmt_visit(node)
 
     def visit_For(self,node):
-        new_body = self.if_exists(node.body, self.visit_list())
-        new_orelse = self.if_exists(node.orelse, self.visit_list())
+        new_body = self.if_exists(node.body, self.visit_list)
+        new_orelse = self.if_exists(node.orelse, self.visit_list)
         new_target = self.visit(node.target)
         new_iter = self.visit(node.iter)
         return_list = self.new_stmts + [ast.copy_location(
@@ -57,8 +57,8 @@ class RewriteName(ast.NodeTransformer):
         return return_list
 
     def visit_AsyncFor(self,node):
-        new_body = self.if_exists(node.body, self.visit_list())
-        new_orelse = self.if_exists(node.orelse, self.visit_list())
+        new_body = self.if_exists(node.body, self.visit_list)
+        new_orelse = self.if_exists(node.orelse, self.visit_list)
         new_target = self.visit(node.target)
         new_iter = self.visit(node.iter)
         return_list = self.new_stmts + [ast.copy_location(
@@ -67,8 +67,8 @@ class RewriteName(ast.NodeTransformer):
         return return_list
 
     def visit_While(self, node):
-        new_body = self.if_exists(node.body, self.visit_list())
-        new_orelse = self.if_exists(node.orelse, self.visit_list())
+        new_body = self.if_exists(node.body, self.visit_list)
+        new_orelse = self.if_exists(node.orelse, self.visit_list)
         new_test = self.visit(node.test)
         return_list = self.new_stmts + [ast.copy_location(
             ast.While(new_test, new_body, new_orelse), node)]
@@ -76,15 +76,20 @@ class RewriteName(ast.NodeTransformer):
         return return_list
 
     def visit_If(self, node):
-        new_body = self.if_exists(node.body, self.visit_list())
-        new_orelse = self.if_exists(node.orelse, self.visit_list())
+        new_body = self.if_exists(node.body, self.visit_list)
+        new_orelse = self.if_exists(node.orelse, self.visit_list)
         new_test = self.visit(node.test)
         return_list = self.new_stmts + [ast.copy_location(
             ast.If(new_test, new_body, new_orelse), node)]
         self.new_stmts.clear()
         return return_list
 
-
+    def visit_With(self, node):
+        new_body = self.if_exists(node.body, self.visit_list)
+        new_withItems = self.if_exists(node.items, self.visit_list)
+        return_list = self.new_stmts + [ast.copy_location(ast.With(new_withItems, new_body), node)]
+        self.new_stmts.clear()
+        return return_list
 
     def visit_Attribute(self, node):
         sub_node = self.visit(node.value)

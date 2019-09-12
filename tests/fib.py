@@ -11,3 +11,8 @@ x.fst.snd = y.fst.fst.snd
 
 def foo(x = y):
     return x.fst.snd
+
+foo(x)
+
+with open("our-ast.py", mode='r') as fib:
+    x.fst.fst.snd = 0
