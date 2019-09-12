@@ -35,13 +35,56 @@ class RewriteName(ast.NodeTransformer):
         return self.unique
 
     def visit_Assign(self, node):
-        new_node = self.generic_visit(node)
-        if (len(self.new_stmts) > 0):
-            return_list = self.new_stmts + [new_node]
-            self.new_stmts.clear()
-            return return_list
-        else:
-            return new_node
+        return self.generic_stmt_visit(node)
+
+    def vist_Delete(self, node):
+        return self.generic_stmt_visit(node)
+
+    def visit_AugAssign(self,node):
+        return self.generic_stmt_visit(node)
+
+    def visit_AnnAssign(self,node):
+        return self.generic_stmt_visit(node)
+
+    def visit_For(self,node):
+        new_body = self.if_exists(node.body, self.visit_list())
+        new_orelse = self.if_exists(node.orelse, self.visit_list())
+        new_target = self.visit(node.target)
+        new_iter = self.visit(node.iter)
+        return_list = self.new_stmts + [ast.copy_location(
+            ast.For(new_target, new_iter, new_body, new_orelse), node)]
+        self.new_stmts.clear()
+        return return_list
+
+    def visit_AsyncFor(self,node):
+        new_body = self.if_exists(node.body, self.visit_list())
+        new_orelse = self.if_exists(node.orelse, self.visit_list())
+        new_target = self.visit(node.target)
+        new_iter = self.visit(node.iter)
+        return_list = self.new_stmts + [ast.copy_location(
+            ast.AsyncFor(new_target, new_iter, new_body, new_orelse), node)]
+        self.new_stmts.clear()
+        return return_list
+
+    def visit_While(self, node):
+        new_body = self.if_exists(node.body, self.visit_list())
+        new_orelse = self.if_exists(node.orelse, self.visit_list())
+        new_test = self.visit(node.test)
+        return_list = self.new_stmts + [ast.copy_location(
+            ast.While(new_test, new_body, new_orelse), node)]
+        self.new_stmts.clear()
+        return return_list
+
+    def visit_If(self, node):
+        new_body = self.if_exists(node.body, self.visit_list())
+        new_orelse = self.if_exists(node.orelse, self.visit_list())
+        new_test = self.visit(node.test)
+        return_list = self.new_stmts + [ast.copy_location(
+            ast.If(new_test, new_body, new_orelse), node)]
+        self.new_stmts.clear()
+        return return_list
+
+
 
     def visit_Attribute(self, node):
         sub_node = self.visit(node.value)
@@ -52,10 +95,12 @@ class RewriteName(ast.NodeTransformer):
             self.new_stmts.append(ast.copy_location(ast.Assign([new_name], sub_node), sub_node))
             return ast.copy_location(ast.Attribute(new_name, node.attr, node.ctx), node)
 
-    def generic_stmt_visit(self, node, func):
+    def generic_stmt_visit(self, node):
         new_node = self.generic_visit(node)
         if (len(self.new_stmts) > 0):
-            return func(self, node)
+            return_list = self.new_stmts + [new_node]
+            self.new_stmts.clear()
+            return return_list
         else:
             return new_node
 
@@ -76,7 +121,7 @@ class RewriteName(ast.NodeTransformer):
         if node:
             return func(node)
 
-## Stmt
+    ## Stmt
 
     def visit_FunctionDef(self, node):
         new_body = self.if_exists(node.body, self.visit_list)
@@ -96,7 +141,16 @@ class RewriteName(ast.NodeTransformer):
     def visit_AsyncFunctionDef(self, node):
         self.visit_FunctionDef(node)
 
-    # def vist_ClassDef(self,node):
+    def vist_ClassDef(self, node):
+        new_body = self.if_exists(node.body, self.visit_list)
+        new_bases = self.if_exists(node.bases, self.visit_list)
+        new_keywords = self.if_exists(node.keywords, self.visit_list)
+        new_decorator_list = self.if_exists(node.decorator_list, self.visit_list)
+        return_list = self.new_stmts + [ast.copy_location(
+            ast.ClassDef(node.name, new_bases, new_keywords, new_body, new_decorator_list), node)]
+        self.new_stmts.clear()
+        return return_list
+
 
     def visit_Return(self, node):
         if node.value:
@@ -109,7 +163,6 @@ class RewriteName(ast.NodeTransformer):
             return new_node
 
         return node
-
 
 
 ast_node = RewriteName().visit(ast_node)

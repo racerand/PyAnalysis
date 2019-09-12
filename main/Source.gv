@@ -1,24 +1,24 @@
 // Control Flow Graph
 digraph {
-	1 [label="8: x = Fib(1, 2)" peripheries=1 shape=rectangle]
+	1 [label="7: x = Fib(1, 2)" peripheries=1 shape=rectangle]
 	0 -> 1
-	2 [label="9: y = Fib(x, 2)" peripheries=1 shape=rectangle]
+	2 [label="8: y = Fib(x, 2)" peripheries=1 shape=rectangle]
 	1 -> 2
-	3 [label="10: x.fst = y" peripheries=1 shape=rectangle]
+	3 [label="9: x.fst = y" peripheries=1 shape=rectangle]
 	2 -> 3
-	4 [label="11: name2 = x.fst" peripheries=1 shape=rectangle]
+	4 [label="10: name2 = x.fst" peripheries=1 shape=rectangle]
 	3 -> 4
-	5 [label="11: name3 = y.fst" peripheries=1 shape=rectangle]
+	5 [label="10: name3 = y.fst" peripheries=1 shape=rectangle]
 	4 -> 5
-	6 [label="11: name4 = name3.fst" peripheries=1 shape=rectangle]
+	6 [label="10: name4 = name3.fst" peripheries=1 shape=rectangle]
 	5 -> 6
-	7 [label="11: name2.snd = name4.snd" peripheries=1 shape=rectangle]
+	7 [label="10: name2.snd = name4.snd" peripheries=1 shape=rectangle]
 	6 -> 7
-	8 [label="13: enter: foo(x)" peripheries=2 shape=oval]
-	9 [label="13: exit: foo(x)" peripheries=2 shape=oval]
+	8 [label="12: enter: foo(x)" peripheries=2 shape=oval]
+	9 [label="12: exit: foo(x)" peripheries=2 shape=oval]
 	11 -> 9
-	10 [label="14: name5 = x.fst" peripheries=1 shape=rectangle]
+	10 [label="13: name5 = x.fst" peripheries=1 shape=rectangle]
 	8 -> 10
-	11 [label="14: return name5.snd" peripheries=1 shape=rectangle]
+	11 [label="13: return name5.snd" peripheries=1 shape=rectangle]
 	10 -> 11
 }
