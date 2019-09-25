@@ -4,7 +4,14 @@ class Fib(object):
         self.fst = fst
         self.snd = snd
 
-x = Fib(1, 2)
+    def bar(self):
+        bar2 = "bar"
+        print(bar2)
+one = 1
+two = 2
+
+x = Fib(one, two)
 z = x
 y = z.fst
 x.snd = y
+x.bar()
