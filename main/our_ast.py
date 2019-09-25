@@ -164,6 +164,14 @@ class RewriteName(ast.NodeTransformer):
             self.new_stmts.append(ast.copy_location(ast.Assign([new_name], sub_node), sub_node))
             return ast.copy_location(ast.Attribute(new_name, node.attr, node.ctx), node)
 
+    def visit_Call(self, node):
+        new_nodes = self.generic_visit(node)
+        for arg in node.args:
+            if not (is_constant_value(arg)):
+                new_name = self.unique_name()
+                load_name = ast.copy_location(ast.Name(new_name, ast.Load), arg)
+                store_name = ast.copy_location(ast.Name(new_name, ast.Store), arg)
+
     def generic_stmt_visit(self, node):
         new_node = self.generic_visit(node)
         if (len(self.new_stmts) > 0):
@@ -232,6 +240,10 @@ class RewriteName(ast.NodeTransformer):
 
         return node
 
+
+def is_constant_value(node):
+    isinstance(node, ast.Name) or isinstance(node, ast.Num) or isinstance(node, ast.Str) \
+    or isinstance(ast.Bytes) or isinstance(node, ast.NameConstant) or isinstance(node, ast.Constant)
 
 ast_node = RewriteName().visit(ast_node)
 
