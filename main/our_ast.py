@@ -1,6 +1,7 @@
 import ast
 import inspect
 import tests.fib
+import tests.test2
 import os
 
 from lib.fuzzingbook.ControlFlow import gen_cfg, to_graph
@@ -14,11 +15,7 @@ def fib(n, ):
     return l
 
 
-f = open("../tests/fib.py", "r")
-contents = f.read()
-
-# ast_node = ast.parse(inspect.getsource(fib))
-ast_node = ast.parse(contents)
+ast_node = ast.parse(inspect.getsource(tests.test2))
 
 
 class RewriteName(ast.NodeTransformer):
