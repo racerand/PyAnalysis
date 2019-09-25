@@ -165,12 +165,25 @@ class RewriteName(ast.NodeTransformer):
             return ast.copy_location(ast.Attribute(new_name, node.attr, node.ctx), node)
 
     def visit_Call(self, node):
-        new_nodes = self.generic_visit(node)
-        for arg in node.args:
+        new_node = self.generic_visit(node)
+        if new_node.args is None:
+            return new_node
+
+        new_args = []
+        for arg in new_node.args:
             if not (is_constant_value(arg)):
+                print("call if")
                 new_name = self.unique_name()
                 load_name = ast.copy_location(ast.Name(new_name, ast.Load), arg)
                 store_name = ast.copy_location(ast.Name(new_name, ast.Store), arg)
+                new_assign = ast.copy_location(ast.Assign([store_name], arg), arg)
+                self.new_stmts.append(new_assign)
+                new_args.append(load_name)
+            else:
+                print("else")
+                new_args.append(arg)
+            print(arg)
+        return ast.copy_location(ast.Call(new_node.func, new_args, new_node.keywords), new_node)
 
     def generic_stmt_visit(self, node):
         new_node = self.generic_visit(node)
@@ -242,8 +255,9 @@ class RewriteName(ast.NodeTransformer):
 
 
 def is_constant_value(node):
-    isinstance(node, ast.Name) or isinstance(node, ast.Num) or isinstance(node, ast.Str) \
-    or isinstance(ast.Bytes) or isinstance(node, ast.NameConstant) or isinstance(node, ast.Constant)
+    return isinstance(node, ast.Name) or isinstance(node, ast.Num) or isinstance(node, ast.Str) \
+    or isinstance(node, ast.Bytes) or isinstance(node, ast.NameConstant) or isinstance(node, ast.Constant)
+
 
 ast_node = RewriteName().visit(ast_node)
 

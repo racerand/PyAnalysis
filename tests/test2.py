@@ -10,7 +10,7 @@ class Fib(object):
 one = 1
 two = 2
 
-x = Fib(one, two)
+x = Fib(1 + 0, two)
 z = x
 y = z.fst
 x.snd = y
