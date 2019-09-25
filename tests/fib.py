@@ -9,6 +9,9 @@ y = Fib(x, 2)
 x.fst = y
 x.fst.snd = y.fst.fst.snd
 
+x = y
+y = x
+
 def foo(x = y):
     return x.fst.snd
 

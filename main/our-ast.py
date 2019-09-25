@@ -35,18 +35,48 @@ class RewriteName(ast.NodeTransformer):
         return self.unique
 
     def visit_Assign(self, node):
-        return self.generic_stmt_visit(node)
+        new_nodes = self.generic_stmt_visit(node)
+        last_node = None
+        if isinstance(new_nodes, list):
+            # We have a list, which means that the last element is the Assign node
+            last_node = new_nodes.pop()
+        else:
+            last_node = new_nodes
+
+        changed_nodes = last_node
+        if all([isinstance(node, ast.Name) for node in last_node.targets]):
+            pass
+        elif not isinstance(last_node.value, ast.Name) \
+                and len(last_node.targets) == 1 \
+                and isinstance(last_node.targets[0], ast.Attribute):
+            print("has not name")
+            new_name = self.unique_name()
+            new_load = ast.copy_location(ast.Name(new_name, ast.Load), node)
+            new_store = ast.copy_location(ast.Name(new_name, ast.Store), node)
+            extra_assign = ast.copy_location(ast.Assign([new_store], last_node.value), node)
+            new_assign = ast.copy_location(ast.Assign(last_node.targets, new_load), node)
+            new_nodes.extend([extra_assign, new_assign])
+            return new_nodes
+
+        if isinstance(new_nodes, list):
+            if isinstance(changed_nodes, list):
+                new_nodes.extend(changed_nodes)
+            else:
+                new_nodes.append(changed_nodes)
+            return new_nodes
+        else:
+            return changed_nodes
 
     def vist_Delete(self, node):
         return self.generic_stmt_visit(node)
 
-    def visit_AugAssign(self,node):
+    def visit_AugAssign(self, node):
         return self.generic_stmt_visit(node)
 
-    def visit_AnnAssign(self,node):
+    def visit_AnnAssign(self, node):
         return self.generic_stmt_visit(node)
 
-    def visit_For(self,node):
+    def visit_For(self, node):
         new_body = self.if_exists(node.body, self.visit_list)
         new_orelse = self.if_exists(node.orelse, self.visit_list)
         new_target = self.visit(node.target)
@@ -56,7 +86,7 @@ class RewriteName(ast.NodeTransformer):
         self.new_stmts.clear()
         return return_list
 
-    def visit_AsyncFor(self,node):
+    def visit_AsyncFor(self, node):
         new_body = self.if_exists(node.body, self.visit_list)
         new_orelse = self.if_exists(node.orelse, self.visit_list)
         new_target = self.visit(node.target)
@@ -98,7 +128,7 @@ class RewriteName(ast.NodeTransformer):
         self.new_stmts.clear()
         return return_list
 
-    def visit_Raise(self,node):
+    def visit_Raise(self, node):
         return self.generic_stmt_visit(node)
 
     # Excepthandler might be a bit tricky
@@ -110,7 +140,8 @@ class RewriteName(ast.NodeTransformer):
             new_type = self.if_exists(expt_handler.type, self.visit)
             pre_nodes += self.new_stmts
             self.new_stmts.clear()
-            new_handler = ast.copy_location(ast.excepthandler(type=new_type, name=expt_handler.name, body=new_body), expt_handler)
+            new_handler = ast.copy_location(ast.excepthandler(type=new_type, name=expt_handler.name, body=new_body),
+                                            expt_handler)
             expt_handlers.append(new_handler)
         new_body = self.if_exists(node.body, self.visit_list)
         new_orelse = self.if_exists(node.orelse, self.visit_list)
@@ -118,7 +149,6 @@ class RewriteName(ast.NodeTransformer):
         new_try = ast.copy_location(ast.Try(new_body, expt_handlers, new_orelse, new_final_body), node)
         # return the new nodes before the try, since these should not be run inside the try where they could be skipped
         return pre_nodes + [new_try]
-
 
     def visit_Assert(self, node):
         return self.generic_stmt_visit(node)
@@ -192,7 +222,6 @@ class RewriteName(ast.NodeTransformer):
             ast.ClassDef(node.name, new_bases, new_keywords, new_body, new_decorator_list), node)]
         self.new_stmts.clear()
         return return_list
-
 
     def visit_Return(self, node):
         if node.value:
