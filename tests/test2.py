@@ -9,8 +9,19 @@ class Fib(object):
 one = 1
 two = 2
 
-x = Fib(1 + 0, two)
+x = Fib(1 + 0, 2)
 z = x
 y = z.fst
 x.snd = y
 x.bar()
+
+x = None
+
+def foo():
+    if x:
+        return
+    else:
+        pass
+    return 1 + 2
+
+foo()
