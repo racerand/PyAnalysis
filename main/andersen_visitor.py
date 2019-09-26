@@ -15,6 +15,7 @@ class AndersenAnalysis(ast.NodeVisitor):
         super().__init__()
         self.current_meth = 'root'
         self.unique = 0
+        self.node_map = {}
 
     def unique_name(self, type):
         return "{}{}".format(type, self.unique_number())
@@ -32,6 +33,11 @@ class AndersenAnalysis(ast.NodeVisitor):
             + Store(node.targets[0].value.id, node.targets[0].attr, node.value.id)
         if isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Call):
             if isinstance(node.value.func, ast.Name):
+                Iname = self.unique_name("I")
+                self.node_map[Iname] = node
+                if node.args:
+                    for i, arg in enumerate(node.args, start=0):
+                        + ActualArg(Iname, i, arg.id)
                 if node.value.func.id[0].isupper():
                     + Alloc(node.targets[0].id, self.unique_name("H"), self.current_meth)
         self.generic_visit(node)
@@ -39,9 +45,6 @@ class AndersenAnalysis(ast.NodeVisitor):
     def visit_Call(self, node):
         if isinstance(node.func, ast.Attribute):
             + VCall(node.func.value.id, node.func.attr, node.lineno, self.current_meth)
-        if node.args:
-            for i, arg in enumerate(node.args, start=0):
-                + ActualArg(node.lineno, i, arg.id)
         self.generic_visit(node)
 
     def visit_list(self, nodes):
