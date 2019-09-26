@@ -5,8 +5,7 @@ class Fib(object):
         self.snd = snd
 
     def bar(self):
-        bar2 = "bar"
-        print(bar2)
+        print("bar")
 one = 1
 two = 2
 
