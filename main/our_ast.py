@@ -171,7 +171,7 @@ class RewriteName(ast.NodeTransformer):
 
         new_args = []
         for arg in new_node.args:
-            if not (is_constant_value(arg)):
+            if not (isinstance(arg, ast.Name)):
                 new_name = self.unique_name()
                 load_name = ast.copy_location(ast.Name(new_name, ast.Load), arg)
                 store_name = ast.copy_location(ast.Name(new_name, ast.Store), arg)
