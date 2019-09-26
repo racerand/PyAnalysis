@@ -1,3 +1,7 @@
+class Empt(object):
+    def e(self):
+        return
+
 class Fib(object):
     def __init__(self, fst  , snd) -> None:
         super().__init__()
@@ -7,8 +11,8 @@ class Fib(object):
     def bar(self):
         print("bar")
 
-    def foo(self):
-        fooVar = 1
+    def foo(self, fooArg):
+        fooVar = 3
         return fooVar
 one = 1
 two = 2
@@ -20,4 +24,4 @@ q = Fib(1,2)
 q.snd = x
 q2 = q.snd
 q = x
-w = x.foo()
+x.foo(q)

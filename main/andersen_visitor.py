@@ -8,7 +8,7 @@ from util import if_exists
 ast_node = ast.parse(inspect.getsource(tests.test2))
 
 pyDatalog.create_terms('VAR,HEAP,METH, TO, FROM, BASE, BASEH, FLD, Alloc, Move, Load, Store, VCall, FormalArg,'
-                       ' TOMETH, INVO, BASE, SIG, INMETH, HEAPT, ActualArg, FormalReturn, ActualReturn,'
+                       ' TOMETH, INVO, BASE, SIG, INMETH, HEAPT, N, ActualArg, FormalReturn, ActualReturn,'
                        'ThisVar, HeapType, LookUp, VarType, InMethod, SubType, VarPointsTo, CallGraph, FldPointsTo, '
                        'InterProcAssign, Reachable')
 
@@ -28,31 +28,24 @@ class AndersenAnalysis(ast.NodeVisitor):
         self.unique += 1
         return self.unique
 
-    def visit_FunctionDef(self, node):
-        if_exists(node.args, self.visit_list)
-        if_exists(node.decorator_list, self.visit_list)
-
-        stmt_name = self.unique_name("stmt")
-        self.stmt_map[stmt_name] = node
-
-        if_exists(node.body, self.visit_list)
-        if_exists(node.returns, self.visit)
-
     def visit_Delete(self, node):
         stmt_name = self.unique_name("stmt")
         self.stmt_map[stmt_name] = node
+        self.current_stmt = stmt_name
 
         self.generic_visit(node)
 
     def visit_Assert(self, node):
         stmt_name = self.unique_name("stmt")
         self.stmt_map[stmt_name] = node
+        self.current_stmt = stmt_name
 
         self.generic_visit(node)
 
     def visit_Expr(self, node):
         stmt_name = self.unique_name("stmt")
         self.stmt_map[stmt_name] = node
+        self.current_stmt = stmt_name
 
         self.generic_visit(node)
 
@@ -60,6 +53,7 @@ class AndersenAnalysis(ast.NodeVisitor):
     def visit_Assign(self, node):
         stmt_name = self.unique_name("stmt")
         self.stmt_map[stmt_name] = node
+        self.current_stmt = stmt_name
         if isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Name):
             + Move(node.targets[0].id, node.value.id)
         if isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Attribute):
@@ -90,6 +84,9 @@ class AndersenAnalysis(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node):
         method_name = self.unique_name("M")
+        stmt_name = self.unique_name("stmt")
+        self.stmt_map[stmt_name] = node
+        self.current_stmt = stmt_name
         + LookUp("Type_" + self.current_class, node.name, method_name)
         if node.args:
             for i, arg in enumerate(node.args.args):
@@ -120,7 +117,9 @@ VarPointsTo(TO, HEAP) <= Load(TO, BASE, FLD) & VarPointsTo(BASE, BASEH) & FldPoi
 Reachable(TOMETH) <= VCall(BASE, SIG, INVO, INMETH) & Reachable(INMETH) & VarPointsTo(BASE, HEAP) & HeapType(HEAP, HEAPT) & LookUp(HEAPT, SIG, TOMETH)
 CallGraph(INVO, TOMETH) <= VCall(BASE, SIG, INVO, INMETH) & Reachable(INMETH) & VarPointsTo(BASE, HEAP) & HeapType(HEAP, HEAPT) & LookUp(HEAPT, SIG, TOMETH)
 InterProcAssign(TO, FROM) <= CallGraph(INVO, METH) & FormalReturn(METH, FROM) & ActualReturn(INVO, TO)
+InterProcAssign(TO, FROM) <= CallGraph(INVO, METH) & FormalArg(METH, N, TO) & ActualArg(INVO, N, FROM)
+#VarPointsTo(TO, HEAP) <= InterProcAssign(TO, FROM) & VarPointsTo(FROM, HEAP)
+
 
 AndersenAnalysis().visit(RewriteName().visit(ast_node))
-print(VarPointsTo(VAR,HEAP))
-print(ActualReturn(INVO, TO))
+print(VarPointsTo(TO,FROM))
