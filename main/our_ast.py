@@ -239,16 +239,33 @@ class RewriteName(ast.NodeTransformer):
         return return_list
 
     def visit_Return(self, node):
-        if node.value:
-            new_value = self.visit(node.value)
-            new_node = ast.copy_location(ast.Return(new_value), node)
-            if len(self.new_stmts) > 0:
-                return_list = self.new_stmts + [new_node]
-                self.new_stmts.clear()
-                return return_list
-            return new_node
+        new_value = self.if_exists(node.value, self.visit)
+        return_list = []
+        return_list.extend(self.new_stmts)
+        self.new_stmts.clear()
 
-        return node
+        if not isinstance(new_value, ast.Name):
+
+            actual_value = new_value
+
+            if not new_value:
+                actual_value = ast.copy_location(ast.NameConstant(None), node)
+
+            new_name = self.unique_name()
+            load_name = ast.copy_location(ast.Name(new_name, ast.Load), actual_value)
+            store_name = ast.copy_location(ast.Name(new_name, ast.Store), actual_value)
+
+            new_assign = ast.copy_location(ast.Assign([store_name], actual_value), actual_value)
+
+            node.value = load_name
+
+            return_list.append(new_assign)
+        else:
+            node.value = new_value
+
+        return_list.append(node)
+
+        return return_list
 
 
 def is_constant_value(node):
