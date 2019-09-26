@@ -6,11 +6,18 @@ class Fib(object):
 
     def bar(self):
         print("bar")
+
+    def foo(self):
+        fooVar = 1
+        return fooVar
 one = 1
 two = 2
 
 x = Fib(1 + 0, two)
-z = x
-y = z.fst
+y = 3
 x.snd = y
-x.bar()
+q = Fib(1,2)
+q.snd = x
+q2 = q.snd
+q = x
+w = x.foo()
