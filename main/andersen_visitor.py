@@ -28,6 +28,35 @@ class AndersenAnalysis(ast.NodeVisitor):
         self.unique += 1
         return self.unique
 
+    def visit_FunctionDef(self, node):
+        if_exists(node.args, self.visit_list)
+        if_exists(node.decorator_list, self.visit_list)
+
+        stmt_name = self.unique_name("stmt")
+        self.stmt_map[stmt_name] = node
+
+        if_exists(node.body, self.visit_list)
+        if_exists(node.returns, self.visit)
+
+    def visit_Delete(self, node):
+        stmt_name = self.unique_name("stmt")
+        self.stmt_map[stmt_name] = node
+
+        self.generic_visit(node)
+
+    def visit_Assert(self, node):
+        stmt_name = self.unique_name("stmt")
+        self.stmt_map[stmt_name] = node
+
+        self.generic_visit(node)
+
+    def visit_Expr(self, node):
+        stmt_name = self.unique_name("stmt")
+        self.stmt_map[stmt_name] = node
+
+        self.generic_visit(node)
+
+
     def visit_Assign(self, node):
         stmt_name = self.unique_name("stmt")
         self.stmt_map[stmt_name] = node
