@@ -11,6 +11,8 @@ pyDatalog.create_terms('VAR,HEAP,METH, TO, FROM, BASE, BASEH, FLD, Alloc, Move, 
                        ' TOMETH, INVO, BASE, SIG, INMETH, HEAPT, N, ActualArg, FormalReturn, ActualReturn,'
                        'ThisVar, HeapType, LookUp, VarType, InMethod, SubType, VarPointsTo, CallGraph, FldPointsTo, '
                        'InterProcAssign, Reachable')
+f = open('output', 'w')
+
 
 class AndersenAnalysis(ast.NodeVisitor):
     def __init__(self) -> None:
@@ -56,26 +58,35 @@ class AndersenAnalysis(ast.NodeVisitor):
         self.current_stmt = stmt_name
         if isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Name):
             + Move(node.targets[0].id, node.value.id)
+            f.write("Move(\"{}\",\"{}\"). \n".format(node.targets[0].id, node.value.id))
         if isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Attribute):
             + Load(node.targets[0].id, node.value.value.id, node.value.attr)
+            f.write("Load(\"{}\",\"{}\",\"{}\").\n".format(node.targets[0].id, node.value.value.id, node.value.attr))
         if isinstance(node.targets[0], ast.Attribute) and isinstance(node.value, ast.Name):
             + Store(node.targets[0].value.id, node.targets[0].attr, node.value.id)
+            f.write("Store(\"{}\",\"{}\",\"{}\").\n".format(node.targets[0].value.id, node.targets[0].attr, node.value.id))
         if isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Call):
             if isinstance(node.value.func, ast.Name):
                 if node.value.args:
                     for i, arg in enumerate(node.value.args, start=0):
                         + ActualArg(self.current_stmt, i, arg.id)
+                        f.write("ActualArg(\"{}\",\"{}\",\"{}\").\n".format(self.current_stmt, i, arg.id))
                 if node.value.func.id[0].isupper():
                     heap_name = self.unique_name("H")
                     + Alloc(node.targets[0].id, heap_name, self.current_meth)
+                    f.write("Alloc(\"{}\",\"{}\",\"{}\").\n".format(node.targets[0].id, heap_name, self.current_meth))
                     + HeapType(heap_name, "Type_" + node.value.func.id)
+                    f.write("HeapType(\"{}\",\"{}\").\n".format(heap_name, "Type_" + node.value.func.id))
             + ActualArg(self.current_stmt, node.targets[0].id)
+            f.write("ActualArg(\"{}\",\"{}\").\n".format(self.current_stmt, node.targets[0].id))
             + ActualReturn(self.current_stmt, node.targets[0].id)
+            f.write("ActualReturn(\"{}\",\"{}\").\n".format(self.current_stmt, node.targets[0].id))
         self.generic_visit(node)
 
     def visit_Call(self, node):
         if isinstance(node.func, ast.Attribute):
             + VCall(node.func.value.id, node.func.attr, self.current_stmt, self.current_meth)
+            f.write("VCall(\"{}\",\"{}\",\"{}\",\"{}\").\n".format(node.func.value.id, node.func.attr, self.current_stmt, self.current_meth))
         self.generic_visit(node)
 
     def visit_list(self, nodes):
@@ -88,9 +99,11 @@ class AndersenAnalysis(ast.NodeVisitor):
         self.stmt_map[stmt_name] = node
         self.current_stmt = stmt_name
         + LookUp("Type_" + self.current_class, node.name, method_name)
+        f.write("LookUp(\"{}\",\"{}\",\"{}\").\n".format("Type_" + self.current_class, node.name, method_name))
         if node.args:
             for i, arg in enumerate(node.args.args):
                 + FormalArg(method_name, i, arg.arg)
+                f.write("FormalArg(\"{}\",\"{}\",\"{}\").\n".format(method_name, i, arg.arg))
         temp = self.current_meth
         self.visit(node.args)
         if_exists(node.decorator_list, self.visit_list)
@@ -101,6 +114,7 @@ class AndersenAnalysis(ast.NodeVisitor):
 
     def visit_Return(self, node):
         + FormalReturn(self.current_meth, node.value.id)
+        f.write("FormalReturn(\"{}\",\"{}\").\n".format(self.current_meth, node.value.id))
 
     def visit_ClassDef(self, node):
         tmp = self.current_class
@@ -123,3 +137,4 @@ InterProcAssign(TO, FROM) <= CallGraph(INVO, METH) & FormalArg(METH, N, TO) & Ac
 
 AndersenAnalysis().visit(RewriteName().visit(ast_node))
 print(VarPointsTo(TO,FROM))
+print(FldPointsTo(BASEH, FLD, HEAP))

@@ -17,6 +17,8 @@ class Fib(object):
 one = 1
 two = 2
 
+fib = Fib
+
 x = Fib(1 + 0, two)
 y = 3
 x.snd = y
