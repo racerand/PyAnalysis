@@ -1,5 +1,4 @@
 import ast
-from pyDatalog import pyDatalog
 import inspect
 import tests.test2
 from our_ast import RewriteName
@@ -8,6 +7,7 @@ from util import if_exists
 ast_node = ast.parse(inspect.getsource(tests.test2))
 
 f = open('output', 'w')
+f.write("Reachable(\"root\").\n")
 
 
 class AndersenAnalysis(ast.NodeVisitor):
