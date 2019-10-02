@@ -11,10 +11,12 @@ class Fib(object):
     def foo(self, fooArg):
         fooVar = 3
         return fooVar
-def identity(z):
-    if 1 > 0:
-        return Empt()
-    else:
+def identity(z,z1):
         return z
+
 y = Fib(1,2)
-x = identity(y)
+y.foo = Empt
+y.foo()
+identity = Fib
+
+x = identity(1, y)
