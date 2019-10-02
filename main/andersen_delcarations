@@ -6,6 +6,7 @@ rel Move(to: Str, from: Str)
 rel Load(to: Str, base: Str, fld: Str)
 rel Store(base: Str, fld: Str, from: Str)
 rel VCall(base: Str, sig: Str, invo: Str, inMeth: Str)
+rel SCall(sig: Str, invo: Str, inMeth: Str)
 
 rel FormalArg(meth: Str, n: Str, arg: Str)
 rel ActualArg(invo: Str, n: Str, arg: Str)
@@ -18,6 +19,8 @@ rel CallGraph(invo: Str, meth: Str)
 rel FldPointsTo(baseH: Str, fld: Str, heap: Str)
 rel InterProcAssign(to: Str, from: Str)
 rel Reachable(meth: Str)
+rel SLookUp(sig: Str, meth: Str)
+
 
 
 // Declare some conStraints.
@@ -33,3 +36,5 @@ CallGraph(invo, toMeth) :- VCall(base, sig, invo, inMeth), Reachable(inMeth), Va
 InterProcAssign(to,from) :- CallGraph(invo, meth), FormalArg(meth, n, to), ActualArg(invo, n, from).
 InterProcAssign(to,from) :- CallGraph(invo, meth), FormalReturn(meth, from), ActualReturn(invo, to).
 VarPointsTo(to, heap) :- InterProcAssign(to, from), VarPointsTo(from, heap).
+Reachable(toMeth) :- SCall(sig, invo, inMeth), Reachable(inMeth), SLookUp(sig,toMeth).
+CallGraph(invo, toMeth) :- SCall(sig, invo, inMeth), Reachable(inMeth), SLookUp(sig,toMeth).

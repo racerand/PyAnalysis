@@ -8,22 +8,13 @@ class Fib(object):
         self.fst = fst
         self.snd = snd
 
-    def bar(self):
-        print("bar")
-
     def foo(self, fooArg):
         fooVar = 3
         return fooVar
-one = 1
-two = 2
-
-fib = Fib
-
-x = Fib(1 + 0, two)
-y = 3
-x.snd = y
-q = Fib(1,2)
-q.snd = x
-q2 = q.snd
-q = x
-x.foo(q)
+def identity(z):
+    if 1 > 0:
+        return Empt()
+    else:
+        return z
+y = Fib(1,2)
+x = identity(y)

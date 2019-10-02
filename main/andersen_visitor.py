@@ -17,7 +17,7 @@ class AndersenAnalysis(ast.NodeVisitor):
         self.unique = 0
         self.stmt_map = {}
         self.current_stmt = ""
-        self.current_class = ""
+        self.current_class = "root"
 
     def unique_name(self, type):
         return "{}{}".format(type, self.unique_number())
@@ -60,20 +60,23 @@ class AndersenAnalysis(ast.NodeVisitor):
             f.write("Store(\"{}\",\"{}\",\"{}\").\n".format(node.targets[0].value.id, node.targets[0].attr, node.value.id))
         if isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Call):
             if isinstance(node.value.func, ast.Name):
-                if node.value.args:
-                    for i, arg in enumerate(node.value.args, start=0):
-                        f.write("ActualArg(\"{}\",\"{}\",\"{}\").\n".format(self.current_stmt, i, arg.id))
                 if node.value.func.id[0].isupper():
                     heap_name = self.unique_name("H")
                     f.write("Alloc(\"{}\",\"{}\",\"{}\").\n".format(node.targets[0].id, heap_name, self.current_meth))
                     f.write("HeapType(\"{}\",\"{}\").\n".format(heap_name, "Type_" + node.value.func.id))
-            f.write("ActualArg(\"{}\",\"0\",\"{}\").\n".format(self.current_stmt, node.targets[0].id))
             f.write("ActualReturn(\"{}\",\"{}\").\n".format(self.current_stmt, node.targets[0].id))
+            if node.value.args:
+                for i, arg in enumerate(node.value.args, start=0):
+                    f.write("ActualArg(\"{}\",\"{}\",\"{}\").\n".format(self.current_stmt, i, arg.id))
+
         self.generic_visit(node)
 
     def visit_Call(self, node):
         if isinstance(node.func, ast.Attribute):
             f.write("VCall(\"{}\",\"{}\",\"{}\",\"{}\").\n".format(node.func.value.id, node.func.attr, self.current_stmt, self.current_meth))
+        if isinstance(node.func, ast.Name):
+            if not node.func.id[0].isupper():
+                f.write("SCall(\"{}\",\"{}\",\"{}\").\n".format(node.func.id, self.current_stmt, self.current_meth))
         self.generic_visit(node)
 
     def visit_list(self, nodes):
@@ -85,7 +88,10 @@ class AndersenAnalysis(ast.NodeVisitor):
         stmt_name = self.unique_name("stmt")
         self.stmt_map[stmt_name] = node
         self.current_stmt = stmt_name
-        f.write("LookUp(\"{}\",\"{}\",\"{}\").\n".format("Type_" + self.current_class, node.name, method_name))
+        if self.current_class != "root" :
+            f.write("LookUp(\"{}\",\"{}\",\"{}\").\n".format("Type_" + self.current_class, node.name, method_name))
+        else:
+            f.write("SLookUp(\"{}\",\"{}\"). \n".format(node.name, method_name))
         if node.args:
             for i, arg in enumerate(node.args.args):
                 f.write("FormalArg(\"{}\",\"{}\",\"{}\").\n".format(method_name, i, arg.arg))
