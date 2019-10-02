@@ -9,14 +9,14 @@ class Fib(object):
         self.snd = snd
 
     def foo(self, fooArg):
-        fooVar = 3
+        fooVar = Empt()
         return fooVar
-def identity(z,z1):
+def identity(z):
         return z
 
-y = Fib(1,2)
-y.foo = Empt
-y.foo()
-identity = Fib
+def makeEmpt(z):
+    return Empt()
 
-x = identity(1, y)
+makeEmpt = Fib.foo
+
+x = makeEmpt(Fib(1,2),1)

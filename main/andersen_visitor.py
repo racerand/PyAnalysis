@@ -63,7 +63,7 @@ class AndersenAnalysis(ast.NodeVisitor):
                 if node.value.func.id[0].isupper():
                     heap_name = self.unique_name("H")
                     f.write("Alloc(\"{}\",\"{}\",\"{}\").\n".format(node.targets[0].id, heap_name, self.current_meth))
-                    f.write("HeapType(\"{}\",\"{}\").\n".format(heap_name, "Type_" + node.value.func.id))
+                    #f.write("HeapType(\"{}\",\"{}\").\n".format(heap_name, "Type_" + node.value.func.id))
             f.write("ActualReturn(\"{}\",\"{}\").\n".format(self.current_stmt, node.targets[0].id))
             if node.value.args:
                 for i, arg in enumerate(node.value.args, start=0):
@@ -88,10 +88,14 @@ class AndersenAnalysis(ast.NodeVisitor):
         stmt_name = self.unique_name("stmt")
         self.stmt_map[stmt_name] = node
         self.current_stmt = stmt_name
-        if self.current_class != "root" :
-            f.write("LookUp(\"{}\",\"{}\",\"{}\").\n".format("Type_" + self.current_class, node.name, method_name))
+        heapName = self.unique_name("HM")
+        if self.current_class != "root":
+            tmpName = self.unique_name("name")
+            f.write("Alloc(\"{}\",\"{}\",\"{}\"). \n".format(tmpName, heapName, self.current_meth))
+            f.write("Store(\"{}\",\"{}\",\"{}\"). \n".format(self.current_class, node.name, tmpName))
         else:
-            f.write("SLookUp(\"{}\",\"{}\"). \n".format(node.name, method_name))
+            f.write("Alloc(\"{}\",\"{}\",\"{}\"). \n".format(node.name, heapName, self.current_meth))
+        f.write("HeapIsFunction(\"{}\",\"{}\").\n".format(heapName, method_name))
         if node.args:
             for i, arg in enumerate(node.args.args):
                 f.write("FormalArg(\"{}\",\"{}\",\"{}\").\n".format(method_name, i, arg.arg))
@@ -109,6 +113,7 @@ class AndersenAnalysis(ast.NodeVisitor):
     def visit_ClassDef(self, node):
         tmp = self.current_class
         self.current_class = node.name
+        f.write("Alloc(\"{}\",\"{}\",\"{}\").\n".format(node.name, self.unique_name("HC"), self.current_meth))
         self.generic_visit(node)
         self.current_class = tmp
 
