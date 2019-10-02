@@ -78,7 +78,7 @@ class AndersenAnalysis(ast.NodeVisitor):
                     + HeapType(heap_name, "Type_" + node.value.func.id)
                     f.write("HeapType(\"{}\",\"{}\").\n".format(heap_name, "Type_" + node.value.func.id))
             + ActualArg(self.current_stmt, node.targets[0].id)
-            f.write("ActualArg(\"{}\",\"{}\").\n".format(self.current_stmt, node.targets[0].id))
+            f.write("ActualArg(\"{}\",\"0\",\"{}\").\n".format(self.current_stmt, node.targets[0].id))
             + ActualReturn(self.current_stmt, node.targets[0].id)
             f.write("ActualReturn(\"{}\",\"{}\").\n".format(self.current_stmt, node.targets[0].id))
         self.generic_visit(node)

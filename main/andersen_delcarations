@@ -1,26 +1,26 @@
 /// We can use Flix as an ordinary Datalog solver.
 
 /// Declare two predicate symbols.
-rel Alloc(var: str, heap: str, inMeth: str)
-rel Move(to: str, from: str)
-rel Load(to: str, base: str, fld: str)
-rel Store(base: str, fld: str, from: str)
-rel VCall(base: str, sig: str, invo: str, inMeth: str)
+rel Alloc(var: Str, heap: Str, inMeth: Str)
+rel Move(to: Str, from: Str)
+rel Load(to: Str, base: Str, fld: Str)
+rel Store(base: Str, fld: Str, from: Str)
+rel VCall(base: Str, sig: Str, invo: Str, inMeth: Str)
 
-rel FormalArg(meth: str, n: str, arg: str)
-rel ActualArg(invo: str, n: str, arg: str)
-rel FormalReturn(meth: str, ret: str)
-rel ActualReturn(invo: str, var: str)
-rel HeapType(heap: str, type: str)
-rel LookUp(type: str, sig: str, meth: str)
-rel VarPointsTo(var: str, heap: str)
-rel CallGraph(invo: str, meth: str)
-rel FldPointsTo(baseH: str, fld: str, heap: str)
-rel InterProcAssign(to: str, from: str)
-rel Reachable(meth: str)
+rel FormalArg(meth: Str, n: Str, arg: Str)
+rel ActualArg(invo: Str, n: Str, arg: Str)
+rel FormalReturn(meth: Str, ret: Str)
+rel ActualReturn(invo: Str, var: Str)
+rel HeapType(heap: Str, type: Str)
+rel LookUp(type: Str, sig: Str, meth: Str)
+rel VarPointsTo(var: Str, heap: Str)
+rel CallGraph(invo: Str, meth: Str)
+rel FldPointsTo(baseH: Str, fld: Str, heap: Str)
+rel InterProcAssign(to: Str, from: Str)
+rel Reachable(meth: Str)
 
 
-// Declare some constraints.
+// Declare some conStraints.
 VarPointsTo(var, heap) :- Reachable(meth), Alloc(var, heap, meth).
 VarPointsTo(to, heap) :- Move(to, from), VarPointsTo(from, heap).
 FldPointsTo(baseH, fld, heap) :- Store(base, fld, from), VarPointsTo(from, heap),
