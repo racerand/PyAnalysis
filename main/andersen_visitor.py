@@ -1,10 +1,10 @@
 import ast
 import inspect
-import tests.test2
+import tests.fldPointsToClassAsHeap
 from our_ast import RewriteName
 from util import if_exists
 
-ast_node = ast.parse(inspect.getsource(tests.test2))
+ast_node = ast.parse(inspect.getsource(tests.fldPointsToClassAsHeap))
 
 f = open('output', 'w')
 f.write("Reachable(\"root\").\n")

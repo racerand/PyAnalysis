@@ -39,10 +39,10 @@ Reachable(toMeth) :- SCall(var, invo, inMeth), Reachable(inMeth), VarPointsTo(va
 CallGraph(invo, toMeth) :- SCall(var, invo, inMeth), Reachable(inMeth), VarPointsTo(var, heap), HeapIsFunction(heap, toMeth).
 Alloc(storeVar, heap, inMeth) :- PotentialAllocationSite(invo, storeVar, heap, inMeth),
     SCall(var, invo, inMeth), VarPointsTo(var, callHeap), HeapIsClass(callHeap, classHeap).
-IsClassFor(heap, classHeap) :- PotentialAllocationSite(invo, storeVar, heap, inMeth),
+IsClassFor(heap, callHeap) :- PotentialAllocationSite(invo, storeVar, heap, inMeth),
     SCall(var, invo, inMeth), VarPointsTo(var, callHeap), HeapIsClass(callHeap, classHeap).
 Alloc(storeVar, heap, inMeth) :- PotentialAllocationSite(invo, storeVar, heap, inMeth),
     VCall(base, var, invo, inMeth), VarPointsTo(var, callHeap), HeapIsClass(callHeap, classHeap).
-IsClassFor(heap, classHeap) :- PotentialAllocationSite(invo, storeVar, heap, inMeth),
+IsClassFor(heap, callHeap) :- PotentialAllocationSite(invo, storeVar, heap, inMeth),
     VCall(base, var, invo, inMeth), VarPointsTo(var, callHeap), HeapIsClass(callHeap, classHeap).
 FldPointsTo(instanceHeap, fld, heap) :- FldPointsTo(classHeap, fld, heap), IsClassFor(instanceHeap, classHeap).
