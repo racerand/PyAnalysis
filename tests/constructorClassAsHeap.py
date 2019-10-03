@@ -18,6 +18,5 @@ def identity(z):
 
 def makeEmpt(z):
     return Empt()
-x = Fib(1,2)
-y = Empt()
-x.reinit(y, y)
+
+x = Fib(Empt(),Empt())

@@ -1,2 +1,5 @@
 Gør variable navne unikke
 Forbind klasser og deres konstruktor
+Add reachable clause in inferred constructor calls
+Når vi kalder en metode kan vi infer hvad self er, ud fra basen i FldPointsTo. Men når vi kalder en konstruktor i et,
+    SCall, så har vi et problem. Her er Self bestemt af venstresiden af den assign konteskt hvor konstruktoren opræder

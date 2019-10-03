@@ -19,6 +19,7 @@ class AndersenAnalysis(ast.NodeVisitor):
         self.stmt_map = {}
         self.current_stmt = ""
         self.current_class = "root"
+        self.current_class_heap = ""
 
     def unique_name(self, type):
         return "{}{}".format(type, self.unique_number())
@@ -104,6 +105,8 @@ class AndersenAnalysis(ast.NodeVisitor):
                 for i, arg in enumerate(node.args.args):
                     if(i != 0):
                         f.write("FormalArg(\"{}\",\"{}\",\"{}\").\n".format(method_name, i -1, arg.arg))
+            if node.name == "__init__":
+                f.write("IsInitFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, method_name))
         else:
             f.write("Alloc(\"{}\",\"{}\",\"{}\"). \n".format(node.name, heapName, self.current_meth))
             if node.args:
@@ -125,9 +128,12 @@ class AndersenAnalysis(ast.NodeVisitor):
         tmp = self.current_class
         self.current_class = node.name
         heapName = self.unique_name("HC")
+        tmpHeap = self.current_class_heap
+        self.current_class_heap = heapName
         f.write("Alloc(\"{}\",\"{}\",\"{}\").\n".format(node.name, heapName, self.current_meth))
         f.write("HeapIsClass(\"{}\",\"{}\").\n".format(heapName, self.unique_name("Class")))
         self.generic_visit(node)
+        self.current_class_heap = tmpHeap
         self.current_class = tmp
 
 AndersenAnalysis().visit(RewriteName().visit(ast_node))

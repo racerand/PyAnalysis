@@ -12,6 +12,7 @@ rel PotentialAllocationSite(invo: Str, storeVar: Str, heap: Str, inMeth: Str)
 rel HeapIsClass(heap: Str, class: Str)
 rel IsClassFor(instanceHeap: Str, classHeap: Str)
 rel SelfVar(self: Str, method: Str)
+rel IsInitFor(heap: Str, method:Str)
 
 rel FormalArg(meth: Str, n: Str, arg: Str)
 rel ActualArg(invo: Str, n: Str, arg: Str)
@@ -49,3 +50,8 @@ Alloc(storeVar, heap, inMeth) :- PotentialAllocationSite(invo, storeVar, heap, i
 IsClassFor(heap, callHeap) :- PotentialAllocationSite(invo, storeVar, heap, inMeth),
     VCall(base, var, invo, inMeth), VarPointsTo(var, callHeap), HeapIsClass(callHeap, classHeap).
 FldPointsTo(instanceHeap, fld, heap) :- FldPointsTo(classHeap, fld, heap), IsClassFor(instanceHeap, classHeap).
+CallGraph(invo, toMeth) :- PotentialAllocationSite(invo, storeVar, heap, inMeth),
+    SCall(var, invo, inMeth), VarPointsTo(var, callHeap), HeapIsClass(callHeap, classHeap), IsInitFor(callHeap, toMeth).
+VarPointsTo(self, heap) :- PotentialAllocationSite(invo, storeVar, heap, inMeth),
+    SCall(var, invo, inMeth), VarPointsTo(var, callHeap), HeapIsClass(callHeap, classHeap), IsInitFor(callHeap, toMeth),
+    SelfVar(self, toMeth).
