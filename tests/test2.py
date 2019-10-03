@@ -8,6 +8,8 @@ class Fib(object):
         self.fst = fst
         self.snd = snd
 
+    def __call__(self, *args, **kwargs):
+        print("foo")
     def foo(self, fooArg):
         fooVar = Empt()
         return fooVar
@@ -19,13 +21,4 @@ def makeEmpt(z):
 
 x = Fib(1,2)
 
-Fib.bar = lambda x : x
-
-x.bar()
-
-x.fisk = 2
-
-y = Fib(1,2)
-
-print(y.fisk)
-
+y = x.foo(2)
