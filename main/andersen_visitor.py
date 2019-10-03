@@ -1,10 +1,11 @@
 import ast
 import inspect
 import tests.fldPointsToClassAsHeap
+import tests.constructorClassAsHeap
 from our_ast import RewriteName
 from util import if_exists
 
-ast_node = ast.parse(inspect.getsource(tests.fldPointsToClassAsHeap))
+ast_node = ast.parse(inspect.getsource(tests.constructorClassAsHeap))
 
 f = open('output', 'w')
 f.write("Reachable(\"root\").\n")
@@ -77,6 +78,9 @@ class AndersenAnalysis(ast.NodeVisitor):
     def visit_Call(self, node):
         if isinstance(node.func, ast.Attribute):
             f.write("VCall(\"{}\",\"{}\",\"{}\",\"{}\").\n".format(node.func.value.id, node.func.attr, self.current_stmt, self.current_meth))
+            if node.args:
+                for i, arg in enumerate(node.args, start=0):
+                    f.write("ActualArg(\"{}\",\"{}\",\"{}\").\n".format(self.current_stmt, i, arg.id))
         if isinstance(node.func, ast.Name):
             f.write("SCall(\"{}\",\"{}\",\"{}\").\n".format(node.func.id, self.current_stmt, self.current_meth))
         self.generic_visit(node)
@@ -95,12 +99,17 @@ class AndersenAnalysis(ast.NodeVisitor):
             tmpName = self.unique_name("name")
             f.write("Alloc(\"{}\",\"{}\",\"{}\"). \n".format(tmpName, heapName, self.current_meth))
             f.write("Store(\"{}\",\"{}\",\"{}\"). \n".format(self.current_class, node.name, tmpName))
+            f.write("SelfVar(\"{}\",\"{}\").\n".format(node.args.args[0].arg, method_name))
+            if node.args:
+                for i, arg in enumerate(node.args.args):
+                    if(i != 0):
+                        f.write("FormalArg(\"{}\",\"{}\",\"{}\").\n".format(method_name, i -1, arg.arg))
         else:
             f.write("Alloc(\"{}\",\"{}\",\"{}\"). \n".format(node.name, heapName, self.current_meth))
+            if node.args:
+                for i, arg in enumerate(node.args.args):
+                    f.write("FormalArg(\"{}\",\"{}\",\"{}\").\n".format(method_name, i, arg.arg))
         f.write("HeapIsFunction(\"{}\",\"{}\").\n".format(heapName, method_name))
-        if node.args:
-            for i, arg in enumerate(node.args.args):
-                f.write("FormalArg(\"{}\",\"{}\",\"{}\").\n".format(method_name, i, arg.arg))
         temp = self.current_meth
         self.visit(node.args)
         if_exists(node.decorator_list, self.visit_list)

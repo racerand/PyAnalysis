@@ -10,13 +10,14 @@ class Fib(object):
 
     def __call__(self, *args, **kwargs):
         print("foo")
-    def foo(self, fooArg):
-        self.fst = Empt()
-        return fooVar
+    def reinit(self, fst2, snd2):
+        self.fst = fst2
+        self.snd = snd2
 def identity(z):
         return z
 
 def makeEmpt(z):
     return Empt()
-
-x = Fib(Emp(), Empt())
+x = Fib(1,2)
+y = Empt()
+x.reinit(y, y)

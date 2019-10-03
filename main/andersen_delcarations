@@ -11,7 +11,7 @@ rel HeapIsFunction(heap: Str, method: Str)
 rel PotentialAllocationSite(invo: Str, storeVar: Str, heap: Str, inMeth: Str)
 rel HeapIsClass(heap: Str, class: Str)
 rel IsClassFor(instanceHeap: Str, classHeap: Str)
-rel SelfVar(metod: Str, self: Str)
+rel SelfVar(self: Str, method: Str)
 
 rel FormalArg(meth: Str, n: Str, arg: Str)
 rel ActualArg(invo: Str, n: Str, arg: Str)
