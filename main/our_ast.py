@@ -46,14 +46,12 @@ class RewriteName(ast.NodeTransformer):
         elif not isinstance(last_node.value, ast.Name) \
                 and len(last_node.targets) == 1 \
                 and isinstance(last_node.targets[0], ast.Attribute):
-            print("has not name")
             new_name = self.unique_name()
             new_load = ast.copy_location(ast.Name(new_name, ast.Load), node)
             new_store = ast.copy_location(ast.Name(new_name, ast.Store), node)
             extra_assign = ast.copy_location(ast.Assign([new_store], last_node.value), node)
             new_assign = ast.copy_location(ast.Assign(last_node.targets, new_load), node)
-            new_nodes.extend([extra_assign, new_assign])
-            return new_nodes
+            changed_nodes = [extra_assign, new_assign]
 
         if isinstance(new_nodes, list):
             if isinstance(changed_nodes, list):
