@@ -8,6 +8,8 @@ rel Store(base: Str, fld: Str, from: Str)
 rel VCall(base: Str, var: Str, invo: Str, inMeth: Str)
 rel SCall(var: Str, invo: Str, inMeth: Str)
 rel HeapIsFunction(heap: Str, method: Str)
+rel PotentialAllocationSite(invo: Str, storeVar: Str, heap: Str, inMeth: Str)
+rel HeapIsClass(heap: Str, class: Str)
 
 rel FormalArg(meth: Str, n: Str, arg: Str)
 rel ActualArg(invo: Str, n: Str, arg: Str)
@@ -35,3 +37,7 @@ InterProcAssign(to,from) :- CallGraph(invo, meth), FormalReturn(meth, from), Act
 VarPointsTo(to, heap) :- InterProcAssign(to, from), VarPointsTo(from, heap).
 Reachable(toMeth) :- SCall(var, invo, inMeth), Reachable(inMeth), VarPointsTo(var, heap), HeapIsFunction(heap, toMeth).
 CallGraph(invo, toMeth) :- SCall(var, invo, inMeth), Reachable(inMeth), VarPointsTo(var, heap), HeapIsFunction(heap, toMeth).
+Alloc(storeVar, heap, inMeth) :- PotentialAllocationSite(invo, storeVar, heap, inMeth),
+    SCall(var, invo, inMeth), VarPointsTo(var, callHeap), HeapIsClass(callHeap, classHeap).
+Alloc(storeVar, heap, inMeth) :- PotentialAllocationSite(invo, storeVar, heap, inMeth),
+    VCall(base, var, invo, inMeth), VarPointsTo(var, callHeap), HeapIsClass(callHeap, classHeap).

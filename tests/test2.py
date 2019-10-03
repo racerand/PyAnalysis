@@ -17,6 +17,15 @@ def identity(z):
 def makeEmpt(z):
     return Empt()
 
-makeEmpt = Fib.foo
+x = Fib(1,2)
 
-x = makeEmpt(Fib(1,2),1)
+Fib.bar = lambda x : x
+
+x.bar()
+
+x.fisk = 2
+
+y = Fib(1,2)
+
+print(y.fisk)
+

@@ -59,10 +59,13 @@ class AndersenAnalysis(ast.NodeVisitor):
         if isinstance(node.targets[0], ast.Attribute) and isinstance(node.value, ast.Name):
             f.write("Store(\"{}\",\"{}\",\"{}\").\n".format(node.targets[0].value.id, node.targets[0].attr, node.value.id))
         if isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Call):
+            f.write("PotentialAllocationSite(\"{}\",\"{}\",\"{}\",\"{}\").\n".format(
+                self.current_stmt, node.targets[0].id, self.unique_name("H"), self.current_meth
+            ))
             if isinstance(node.value.func, ast.Name):
                 if node.value.func.id[0].isupper():
                     heap_name = self.unique_name("H")
-                    f.write("Alloc(\"{}\",\"{}\",\"{}\").\n".format(node.targets[0].id, heap_name, self.current_meth))
+                    #f.write("Alloc(\"{}\",\"{}\",\"{}\").\n".format(node.targets[0].id, heap_name, self.current_meth))
                     #f.write("HeapType(\"{}\",\"{}\").\n".format(heap_name, "Type_" + node.value.func.id))
             f.write("ActualReturn(\"{}\",\"{}\").\n".format(self.current_stmt, node.targets[0].id))
             if node.value.args:
@@ -75,8 +78,7 @@ class AndersenAnalysis(ast.NodeVisitor):
         if isinstance(node.func, ast.Attribute):
             f.write("VCall(\"{}\",\"{}\",\"{}\",\"{}\").\n".format(node.func.value.id, node.func.attr, self.current_stmt, self.current_meth))
         if isinstance(node.func, ast.Name):
-            if not node.func.id[0].isupper():
-                f.write("SCall(\"{}\",\"{}\",\"{}\").\n".format(node.func.id, self.current_stmt, self.current_meth))
+            f.write("SCall(\"{}\",\"{}\",\"{}\").\n".format(node.func.id, self.current_stmt, self.current_meth))
         self.generic_visit(node)
 
     def visit_list(self, nodes):
@@ -113,7 +115,9 @@ class AndersenAnalysis(ast.NodeVisitor):
     def visit_ClassDef(self, node):
         tmp = self.current_class
         self.current_class = node.name
-        f.write("Alloc(\"{}\",\"{}\",\"{}\").\n".format(node.name, self.unique_name("HC"), self.current_meth))
+        heapName = self.unique_name("HC")
+        f.write("Alloc(\"{}\",\"{}\",\"{}\").\n".format(node.name, heapName, self.current_meth))
+        f.write("HeapIsClass(\"{}\",\"{}\").\n".format(heapName, self.unique_name("Class")))
         self.generic_visit(node)
         self.current_class = tmp
 
