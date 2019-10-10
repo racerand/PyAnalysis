@@ -2,10 +2,12 @@ import ast
 import inspect
 import tests.fldPointsToClassAsHeap
 import tests.constructorClassAsHeap
+import tests.python_features.fields_add
+import tests.python_features.isinstance_example2
 from our_ast import RewriteName
 from util import if_exists
 
-ast_node = ast.parse(inspect.getsource(tests.constructorClassAsHeap))
+ast_node = ast.parse(inspect.getsource(tests.python_features.isinstance_example2))
 
 f = open('output', 'w')
 f.write("Reachable(\"root\").\n")
