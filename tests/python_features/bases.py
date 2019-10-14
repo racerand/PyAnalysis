@@ -1,4 +1,7 @@
 """"
+This analysis is mostly interesting when we start to handle inheritance. It is a more trivial case than __dict__ in
+datalog we can recognize when there is an assignment to the bases field and the baseHeap is a class. However
+we need a way to deal with tuples in our analysis.
 """
 
 class Pair(object):

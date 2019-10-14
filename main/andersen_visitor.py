@@ -2,22 +2,24 @@ import ast
 import inspect
 import tests.fldPointsToClassAsHeap
 import tests.constructorClassAsHeap
-import tests.python_features.fields_add
+import tests.python_features.bases
 import tests.python_features.isinstance_example2
+import astpretty
 from our_ast import RewriteName
 from util import if_exists
 
-ast_node = ast.parse(inspect.getsource(tests.python_features.isinstance_example2))
+ast_node = ast.parse(inspect.getsource(tests.python_features.bases))
 
 f = open('output', 'w')
+treeDumpFile = open('output_tree', 'w')
 f.write("Reachable(\"root\").\n")
 
 
 class AndersenAnalysis(ast.NodeVisitor):
-    def __init__(self) -> None:
+    def __init__(self, unique_counter) -> None:
         super().__init__()
         self.current_meth = 'root'
-        self.unique = 0
+        self.unique = unique_counter
         self.stmt_map = {}
         self.current_stmt = ""
         self.current_class = "root"
@@ -139,4 +141,8 @@ class AndersenAnalysis(ast.NodeVisitor):
         self.current_class_heap = tmpHeap
         self.current_class = tmp
 
-AndersenAnalysis().visit(RewriteName().visit(ast_node))
+
+rewriteVisitor = RewriteName()
+normalizedAST = rewriteVisitor.visit(ast_node)
+treeDumpFile.write(astpretty.pformat(normalizedAST, show_offsets=False))
+AndersenAnalysis(rewriteVisitor.unique).visit(normalizedAST)
