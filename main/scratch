@@ -1,0 +1,12 @@
+PROBLEM :- delete(var, mainscope) isSubScope(subscope,mainscope) variabelBliverLoaded(var,subscope) ~variabelBliverAssignet(var,subscope)
+PROBLEM :- ~variabelBliverAssignet(var, mainscope) isSubScope(subscope,mainscope) variabelBliverLoaded(var,subscope) ~variabelBliverAssignet(var,subscope)
+
+regel der gør isSubScope transitive
+
+Def a:
+  foo = 2
+  def b:
+    foo = 3
+    del foo
+    def c:
+        print foo

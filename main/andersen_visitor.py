@@ -2,13 +2,13 @@ import ast
 import inspect
 import tests.fldPointsToClassAsHeap
 import tests.constructorClassAsHeap
-import tests.python_features.bases
+import tests.python_features.getitem
 import tests.python_features.isinstance_example2
 import astpretty
 from our_ast import RewriteName
 from util import if_exists
 
-ast_node = ast.parse(inspect.getsource(tests.python_features.bases))
+ast_node = ast.parse(inspect.getsource(tests.python_features.getitem))
 
 f = open('output', 'w')
 treeDumpFile = open('output_tree', 'w')

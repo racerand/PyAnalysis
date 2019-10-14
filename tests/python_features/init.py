@@ -3,7 +3,8 @@ As of writing we treat init by creating a IsInitFor(class,method) relation durin
 happens just by the fact that we are calling a class-object, the reason why we need init is that we need to point
 the self-variable of the init function to the heap that is being allocated. To handle dynamic assignment we must take a
 new approach and handle init just like any other attribute. But derive the CallGraph and VarPointsTo relations from
-the FldPointsTo relation alone.
+the FldPointsTo relation alone. For this to work we need to handle super() and we need to add a init method for
+classes where it is not defined, which only calls super, we can do this in the normalization phase.
 """
 
 class Pair(object):
