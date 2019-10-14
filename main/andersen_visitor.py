@@ -23,6 +23,7 @@ class AndersenAnalysis(ast.NodeVisitor):
         self.current_class = "root"
         self.current_class_heap = ""
 
+
     def unique_name(self, type):
         return "{}{}".format(type, self.unique_number())
 

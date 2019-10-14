@@ -1,6 +1,6 @@
 """"
 Wheter or not it makes sense to consider this feature in a flow and context in an insensitive setting is questionable. But
-in this case we can simply desugar "for i in x" to "i = x.init().next()"
+in this case we can simply desugar "for i in x" to "i = x.iter().next()"
 """
 class Pair(object):
     def __init__(self, fst, snd) -> None:
