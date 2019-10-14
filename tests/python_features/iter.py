@@ -1,5 +1,5 @@
 """"
-Wheter or not it makes sense to consider this feature in a flow and context insensitive setting is questionable. But
+Wheter or not it makes sense to consider this feature in a flow and context in an insensitive setting is questionable. But
 in this case we can simply desugar "for i in x" to "i = x.init().next()"
 """
 class Pair(object):
@@ -10,8 +10,18 @@ class Pair(object):
         self.index = 0
 
     def __iter__(self):
-        yield self.fst
-        yield self.snd
+        return self
+
+    def __next__(self):
+        if self.index == 0:
+            self.index += 1
+            return self.fst
+        elif self.index == 1:
+            self.index += 1
+            return self.snd
+        else:
+            self.index = 0
+            raise StopIteration
 
 def foo(bar):
     pass
