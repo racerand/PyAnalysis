@@ -10,6 +10,8 @@ the cases where __new__ is just a call to object.__new__ and replace it with the
 we could try to somehow combine the approach of potential-allocation site and the fact that only object.__new__ creates
 new heaps. This would mean that the heap name made for the potential-allocation would be the actual name (allocation
 site) used when we get to object.__new__
+Needs context og heap sensitivity
+The running time of the analysis becomes pretty long for real programs with a hierarchy taller than 2.
 """
 
 class IntStr(str):
