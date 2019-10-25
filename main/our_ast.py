@@ -65,7 +65,7 @@ class RewriteName(ast.NodeTransformer):
         elif not isinstance(last_node.value, ast.Name) \
                 and len(last_node.targets) == 1 \
                 and isinstance(last_node.targets[0], ast.Attribute):
-            new_store, new_load = self.generate_unique_Name(node)
+            new_store, new_load = self.generate_unique_Name_store_load(node)
             extra_assign = ast.copy_location(ast.Assign([new_store], last_node.value), node)
             new_assign = ast.copy_location(ast.Assign(last_node.targets, new_load), node)
             changed_nodes = [extra_assign, new_assign]
@@ -176,7 +176,7 @@ class RewriteName(ast.NodeTransformer):
             sub_node.id = self.lookup_name(sub_node.id)
             return ast.copy_location(ast.Attribute(sub_node, node.attr, node.ctx), node)
         else:
-            new_store, new_load = self.generate_unique_Name(sub_node)
+            new_store, new_load = self.generate_unique_Name_store_load(sub_node)
             self.new_stmts.append(ast.copy_location(ast.Assign([new_store], sub_node), sub_node))
             return ast.copy_location(ast.Attribute(new_load, node.attr, node.ctx), node)
 
@@ -211,7 +211,7 @@ class RewriteName(ast.NodeTransformer):
         new_args = []
         for arg in new_node.args:
             if not (isinstance(arg, ast.Name)):
-                store_name, load_name = self.generate_unique_Name(arg)
+                store_name, load_name = self.generate_unique_Name_store_load(arg)
                 new_assign = ast.copy_location(ast.Assign([store_name], arg), arg)
                 self.new_stmts.append(new_assign)
                 new_args.append(load_name)
@@ -259,6 +259,11 @@ class RewriteName(ast.NodeTransformer):
         tmp_scope = self.current_scope_is_class
         self.current_scope_is_class = False
 
+        new_args = self.visit(node.args)
+        new_decorator = self.if_exists(node.decorator_list, self.visit_list)
+        new_stmts = [] + self.new_stmts
+        self.new_stmts.clear()
+
         new_body = self.if_exists(node.body, self.visit_list)
         new_return = self.if_exists(node.returns, self.visit)
         if new_body:
@@ -266,9 +271,8 @@ class RewriteName(ast.NodeTransformer):
         else:
             new_body = self.new_stmts
         self.new_stmts.clear()
-        new_args = self.visit(node.args)
-        new_decorator = self.if_exists(node.decorator_list, self.visit_list)
-        return_list = self.new_stmts + [ast.copy_location(
+
+        return_list = new_stmts + [ast.copy_location(
             ast.FunctionDef(node.name, new_args, new_body, new_decorator, new_return), node)]
         self.new_stmts.clear()
 
@@ -315,7 +319,7 @@ class RewriteName(ast.NodeTransformer):
             if not new_value:
                 actual_value = ast.copy_location(ast.NameConstant(None), node)
 
-            store_name, load_name = self.generate_unique_Name(actual_value)
+            store_name, load_name = self.generate_unique_Name_store_load(actual_value)
 
             new_assign = ast.copy_location(ast.Assign([store_name], actual_value), actual_value)
 
@@ -343,6 +347,14 @@ class RewriteName(ast.NodeTransformer):
                   + "".join(self.namespace_list))
         return node
 
+    def visit_arg(self, node):
+        new_name = self.unique_scoped_name(node.arg)
+        old_name = node.arg
+        node.arg = new_name
+        this_scope = self.namespace_list[-1]
+        self.namespace_map[this_scope][old_name] = new_name
+        return node
+
     def lookup_name(self, formal_name):
         return_name = None
         i = len(self.namespace_list) - 1
@@ -353,7 +365,7 @@ class RewriteName(ast.NodeTransformer):
             i -= 1
         return return_name
 
-    def generate_unique_Name(self, location_name):
+    def generate_unique_Name_store_load(self, location_name):
         new_name = self.new_unique_scoped_name()
         this_scope = self.namespace_list[-1]
         self.namespace_map[this_scope][new_name] = new_name
