@@ -12,7 +12,11 @@ rel PotentialAllocationSite(invo: Str, storeVar: Str, heap: Str, inMeth: Str)
 rel HeapIsClass(heap: Str, class: Str)
 rel IsClassFor(instanceHeap: Str, classHeap: Str)
 rel SelfVar(self: Str, method: Str)
+rel ClsVar(cls: Str, method: Str)
 rel IsInitFor(heap: Str, method:Str)
+rel IsParentFor(heap: Str, parentHeap: Str)
+rel IsBaseFor(heap: Str, var: Str)
+rel IsNewFor(heap: Str, method: Str)
 
 rel FormalArg(meth: Str, n: Str, arg: Str)
 rel ActualArg(invo: Str, n: Str, arg: Str)
@@ -23,6 +27,10 @@ rel CallGraph(invo: Str, meth: Str)
 rel FldPointsTo(baseH: Str, fld: Str, heap: Str)
 rel InterProcAssign(to: Str, from: Str)
 rel Reachable(meth: Str)
+
+HeapIsClass("HObject", "HClass").
+VarPointsTo("object", "HObject").
+FldPointsTo("HObject", "__new__", "ObjectNew")
 
 // Declare some conStraints.
 VarPointsTo(var, heap) :- Reachable(meth), Alloc(var, heap, meth).
@@ -50,8 +58,17 @@ Alloc(storeVar, heap, inMeth) :- PotentialAllocationSite(invo, storeVar, heap, i
 IsClassFor(heap, callHeap) :- PotentialAllocationSite(invo, storeVar, heap, inMeth),
     VCall(base, var, invo, inMeth), VarPointsTo(var, callHeap), HeapIsClass(callHeap, classHeap).
 FldPointsTo(instanceHeap, fld, heap) :- FldPointsTo(classHeap, fld, heap), IsClassFor(instanceHeap, classHeap).
+
+Reachable(toMeth) :- SCall(var, invo, inMeth), Reachable(inMeth), VarPointsTo(var, heap), HeapIsClass(heap, classHeap)
+IsNewFor(classheap, toMeth).
+CallGraph(invo, toMeth) :- SCall(var, invo, inMeth), VarPointsTo(var, classHeap), HeapIsClass(classHeap, class), IsNewFor(classHeap, toMeth)
+, PotentialAllocationSite(invo, storeVar, heap, inMeth).
+VarPointsTo(cls, classHeap) :- SCall(var, invo, inMeth), VarPointsTo(var, classHeap), HeapIsClass(classHeap, class), IsNewFor(classHeap, toMeth)
+, PotentialAllocationSite(invo, storeVar, heap, inMeth), ClsVar(cls, toMeth).
+
 CallGraph(invo, toMeth) :- PotentialAllocationSite(invo, storeVar, heap, inMeth),
     SCall(var, invo, inMeth), VarPointsTo(var, callHeap), HeapIsClass(callHeap, classHeap), IsInitFor(callHeap, toMeth).
 VarPointsTo(self, heap) :- PotentialAllocationSite(invo, storeVar, heap, inMeth),
     SCall(var, invo, inMeth), VarPointsTo(var, callHeap), HeapIsClass(callHeap, classHeap), IsInitFor(callHeap, toMeth),
-    SelfVar(self, toMeth).
+        SelfVar(self, toMeth).
+IsParentFor(heap, parentHeap) :- IsBaseFor(heap,var), VarPointsTo(var, parentHeap), HeapIsClass(parentHeap, class).

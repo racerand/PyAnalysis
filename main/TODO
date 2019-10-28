@@ -5,3 +5,4 @@ Når vi kalder en metode kan vi infer hvad self er, ud fra basen i FldPointsTo. 
     SCall, så har vi et problem. Her er Self bestemt af venstresiden af den assign konteskt hvor konstruktoren opræder
 
 Håndter super
+Omskriv IsClassHeap til en unitær relation

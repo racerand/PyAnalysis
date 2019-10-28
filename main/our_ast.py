@@ -1,15 +1,11 @@
 import ast
 import inspect
 
-import astor
-
-import tests.fib
-import tests.fldPointsToClassAsHeap
-import tests.testScopedNames
-import os
-
-from lib.fuzzingbook.ControlFlow import gen_cfg, to_graph
 from graphviz import Source
+
+import tests.test
+import tests.testScopedNames
+from lib.fuzzingbook.ControlFlow import gen_cfg, to_graph
 
 
 def fib(n, ):
@@ -19,7 +15,7 @@ def fib(n, ):
     return l
 
 
-ast_node = ast.parse(inspect.getsource(tests.testScopedNames))
+ast_node = ast.parse(inspect.getsource(tests.test))
 
 
 class RewriteName(ast.NodeTransformer):
@@ -291,7 +287,17 @@ class RewriteName(ast.NodeTransformer):
         self.namespace_map[node.name] = {}
         tmp_scope = self.current_scope_is_class
         self.current_scope_is_class = True
-
+        if not node.bases:
+            node.bases = [ast.Name("object", ast.Load)]
+        if not node.body:
+            node.body = []
+        if not any(isinstance(stmt, ast.FunctionDef) and stmt.name == "__new__" for stmt in node.body):
+            node.body.append(ast.FunctionDef(name="__new__", args=ast.arguments(args=[ast.arg("cls", annotation=None)], vararg=[], kwonlyargs=[], kw_defaults=[], kwarg=[], defaults=[]), body=[
+                ast.Return(value=ast.Call(args=[ast.Name("cls", ast.Load)], keywords=[],
+                                          func=ast.Attribute(attr="__new__", ctx=ast.Load,
+                                                             value=ast.Call(func=ast.Name("super", ast.Load), args=[],
+                                                                            keywords=[]))))],
+                                             decorator_list=[], returns=None))
         new_body = self.if_exists(node.body, self.visit_list)
         new_bases = self.if_exists(node.bases, self.visit_list)
         new_keywords = self.if_exists(node.keywords, self.visit_list)
@@ -372,6 +378,7 @@ class RewriteName(ast.NodeTransformer):
         new_load = ast.copy_location(ast.Name(new_name, ast.Load), location_name)
         new_store = ast.copy_location(ast.Name(new_name, ast.Store), location_name)
         return new_store, new_load
+
 
 def is_constant_value(node):
     return isinstance(node, ast.Name) or isinstance(node, ast.Num) or isinstance(node, ast.Str) \
