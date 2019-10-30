@@ -1,6 +1,7 @@
 import ast
 import inspect
-import tests.test
+import tests.constructor_sound_first
+import tests.constructor_sound_second
 import tests.constructorClassAsHeap
 import tests.python_features.getitem
 import tests.python_features.isinstance_example2
@@ -8,7 +9,7 @@ import astpretty
 from our_ast import RewriteName
 from util import if_exists
 
-ast_node = ast.parse(inspect.getsource(tests.test))
+ast_node = ast.parse(inspect.getsource(tests.constructor_sound_second))
 
 f = open('output', 'w')
 treeDumpFile = open('output_tree', 'w')
@@ -80,12 +81,10 @@ class AndersenAnalysis(ast.NodeVisitor):
     def visit_Call(self, node):
         if isinstance(node.func, ast.Attribute):
             f.write("VCall(\"{}\",\"{}\",\"{}\",\"{}\").\n".format(node.func.value.id, node.func.attr, self.current_stmt, self.current_meth))
-            for i, arg in enumerate(node.args, start=0):
-                f.write("ActualArg(\"{}\",\"{}\",\"{}\").\n".format(self.current_stmt, i, arg.id))
         if isinstance(node.func, ast.Name):
             f.write("SCall(\"{}\",\"{}\",\"{}\").\n".format(node.func.id, self.current_stmt, self.current_meth))
-            for i, arg in enumerate(node.args):
-                f.write("ActualArg(\"{}\",\"{}\",\"{}\").\n".format(self.current_stmt, i, arg.id))
+        for i, arg in enumerate(node.args):
+            f.write("ActualArg(\"{}\",\"{}\",\"{}\").\n".format(self.current_stmt, i, arg.id))
         self.generic_visit(node)
 
     def visit_list(self, nodes):

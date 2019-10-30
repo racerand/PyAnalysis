@@ -3,7 +3,7 @@ import inspect
 
 from graphviz import Source
 
-import tests.test
+import tests.constructor_sound_first
 import tests.testScopedNames
 from lib.fuzzingbook.ControlFlow import gen_cfg, to_graph
 
@@ -15,7 +15,7 @@ def fib(n, ):
     return l
 
 
-ast_node = ast.parse(inspect.getsource(tests.test))
+ast_node = ast.parse(inspect.getsource(tests.constructor_sound_first))
 
 
 class RewriteName(ast.NodeTransformer):
@@ -169,7 +169,6 @@ class RewriteName(ast.NodeTransformer):
     def visit_Attribute(self, node):
         sub_node = self.visit(node.value)
         if isinstance(sub_node, ast.Name):
-            sub_node.id = self.lookup_name(sub_node.id)
             return ast.copy_location(ast.Attribute(sub_node, node.attr, node.ctx), node)
         else:
             new_store, new_load = self.generate_unique_Name_store_load(sub_node)
