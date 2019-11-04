@@ -92,7 +92,6 @@ class AndersenAnalysis(ast.NodeVisitor):
             self.visit(node)
 
     def visit_FunctionDef(self, node):
-        method_name = self.unique_name("M")
         stmt_name = self.unique_name("stmt")
         self.stmt_map[stmt_name] = node
         self.current_stmt = stmt_name
@@ -102,27 +101,27 @@ class AndersenAnalysis(ast.NodeVisitor):
             f.write("Alloc(\"{}\",\"{}\",\"{}\"). \n".format(tmpName, heapName, self.current_meth))
             f.write("Store(\"{}\",\"{}\",\"{}\"). \n".format(self.current_class, node.name, tmpName))
             if node.name == "__new__":
-                f.write("ClsVar(\"{}\",\"{}\").\n".format(node.args.args[0].arg, method_name))
+                f.write("ClsVar(\"{}\",\"{}\").\n".format(node.args.args[0].arg, heapName))
             else:
-                f.write("SelfVar(\"{}\",\"{}\").\n".format(node.args.args[0].arg, method_name))
+                f.write("SelfVar(\"{}\",\"{}\").\n".format(node.args.args[0].arg, heapName))
             if node.args:
                 for i, arg in enumerate(node.args.args):
                     if(i != 0):
-                        f.write("FormalArg(\"{}\",\"{}\",\"{}\").\n".format(method_name, i -1, arg.arg))
+                        f.write("FormalArg(\"{}\",\"{}\",\"{}\").\n".format(heapName, i -1, arg.arg))
             if node.name == "__init__":
-                f.write("IsInitFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, method_name))
+                f.write("IsInitFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, heapName))
             if node.name == "__new__":
-                f.write("IsNewFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, method_name))
+                f.write("IsNewFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, heapName))
         else:
             f.write("Alloc(\"{}\",\"{}\",\"{}\"). \n".format(node.name, heapName, self.current_meth))
             if node.args:
                 for i, arg in enumerate(node.args.args):
-                    f.write("FormalArg(\"{}\",\"{}\",\"{}\").\n".format(method_name, i, arg.arg))
-        f.write("HeapIsFunction(\"{}\",\"{}\").\n".format(heapName, method_name))
+                    f.write("FormalArg(\"{}\",\"{}\",\"{}\").\n".format(heapName, i, arg.arg))
+        f.write("HeapIsFunction(\"{}\").\n".format(heapName))
         temp = self.current_meth
         self.visit(node.args)
         if_exists(node.decorator_list, self.visit_list)
-        self.current_meth = method_name
+        self.current_meth = heapName
         if_exists(node.body, self.visit_list)
         if_exists(node.returns, self.visit)
         self.current_meth = temp
