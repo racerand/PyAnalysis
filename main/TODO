@@ -12,3 +12,9 @@ Lige nu skelnes der ikke mellem metoder og funktioner defineret i metoder, hvilk
 
 NOTER:
 Vi kan detecte om det argument der bliver givet til object.__new__ faktisk er et klasseobject
+
+IsParent
+og IsParentTrans
+Overapproksimer med at kalde alle metoderne
+Lav prioriteret new/allocation
+Lav eksempler hvor nedarvning er pænt som i java, og grimt som i python
