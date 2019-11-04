@@ -84,7 +84,7 @@ VarPointsTo(cls, classHeap) :- SCall(var, invo, inMeth), VarPointsTo(var, classH
 Alloc(storeVar, heap, inMeth) :- SCall(var, invo, inMeth), VarPointsTo(var, classHeap),
  HeapIsClass(classHeap, class), PotentialAllocationSite(invo, storeVar, heap, inMeth).
 IsClassFor(heap, classHeap) :- SCall(var, invo, inMeth), VarPointsTo(var, classHeap), PotentialAllocationSite(invo, storeVar, heap, inMeth),
-    HeapIsClass(class, classHeap).
+    HeapIsClass(classHeap, class).
 
 //This part handles the transitive closure of the IsParentFor relation.
 IsParentTrans(child, parent) :- IsParentFor(child, parent).

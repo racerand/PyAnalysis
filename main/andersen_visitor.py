@@ -3,6 +3,7 @@ import inspect
 import tests.constructor_sound_first
 import tests.test_simple_alloc
 import tests.test_multiple_new_alloc
+import tests.test_tripple_new_alloc
 import tests.constructorClassAsHeap
 import tests.python_features.getitem
 import tests.python_features.isinstance_example2
@@ -10,7 +11,7 @@ import astpretty
 from our_ast import RewriteName
 from util import if_exists
 
-ast_node = ast.parse(inspect.getsource(tests.test_multiple_new_alloc))
+ast_node = ast.parse(inspect.getsource(tests.test_tripple_new_alloc))
 
 f = open('output', 'w')
 treeDumpFile = open('output_tree', 'w')
