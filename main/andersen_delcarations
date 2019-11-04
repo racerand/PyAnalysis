@@ -60,14 +60,19 @@ CallGraph(invo, heap) :- SCall(var, invo, inMeth), Reachable(inMeth), VarPointsT
 //    VCall(base, var, invo, inMeth), VarPointsTo(var, callHeap), HeapIsClass(callHeap, classHeap).
 FldPointsTo(instanceHeap, fld, heap) :- FldPointsTo(classHeap, fld, heap), IsClassFor(instanceHeap, classHeap).
 
+
+//Allocate an object with the right class if we encounter ObjectNew
 IsClassFor(heap, classHeap) :- SCall(var, invo, inMeth), VarPointsTo(var, "ObjectNew"), PotentialAllocationSite(invo, storeVar, heap, inMeth),
     ActualArg(invo, "0", clsVar), VarPointsTo(clsVar, classHeap).
 Alloc(storeVar, heap, inMeth) :- SCall(var, invo, inMeth), VarPointsTo(var, "ObjectNew"), PotentialAllocationSite(invo, storeVar, heap, inMeth).
+
+
 Reachable(toMeth) :- SCall(var, invo, inMeth), Reachable(inMeth), VarPointsTo(var, heap), HeapIsClass(heap, classHeap),
     IsNewFor(classheap, toMeth).
 CallGraph(invo, toMeth) :- SCall(var, invo, inMeth), VarPointsTo(var, classHeap), HeapIsClass(classHeap, class), IsNewFor(classHeap, toMeth).
 VarPointsTo(cls, classHeap) :- SCall(var, invo, inMeth), VarPointsTo(var, classHeap), HeapIsClass(classHeap, class), IsNewFor(classHeap, toMeth),
  ClsVar(cls, toMeth).
+
 
 IsClassFor(heap, classHeap) :- VCall(base, fld,  invo, inMeth), VarPointsTo(base, baseHeap), FldPointsTo(baseHeap, fld, "ObjectNew"), PotentialAllocationSite(invo, storeVar, heap, inMeth),
     ActualArg(invo, "0", clsVar), VarPointsTo(clsVar, classHeap).
@@ -81,7 +86,7 @@ VarPointsTo(cls, fldHeap) :- VCall(base, fld, invo, inMeth), VarPointsTo(base, b
  ClsVar(cls, toMeth).
 
 IsParentTrans(child, parent) :- IsParentFor(child, parent).
-IsParentTrans(classHeap, classHeap) :- IsClass(classHeap, class).
+IsParentTrans(classHeap, classHeap) :- HeapIsClass(classHeap, class).
 IsParentTrans(child, gparent) :- IsParentTrans(child, parent), IsParentTrans(parent, gparent).
 
 CallGraph(invo, method) :- VCall(childVar, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(childVar, childHeap),

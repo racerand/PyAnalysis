@@ -290,13 +290,13 @@ class RewriteName(ast.NodeTransformer):
             node.bases = [ast.Name("object", ast.Load)]
         if not node.body:
             node.body = []
-        if not any(isinstance(stmt, ast.FunctionDef) and stmt.name == "__new__" for stmt in node.body):
-            node.body.append(ast.FunctionDef(name="__new__", args=ast.arguments(args=[ast.arg("cls", annotation=None)], vararg=[], kwonlyargs=[], kw_defaults=[], kwarg=[], defaults=[]), body=[
-                ast.Return(value=ast.Call(args=[ast.Name("cls", ast.Load)], keywords=[],
-                                          func=ast.Attribute(attr="__new__", ctx=ast.Load,
-                                                             value=ast.Call(func=ast.Name("super", ast.Load), args=[],
-                                                                            keywords=[]))))],
-                                             decorator_list=[], returns=None))
+        # if not any(isinstance(stmt, ast.FunctionDef) and stmt.name == "__new__" for stmt in node.body):
+        #     node.body.append(ast.FunctionDef(name="__new__", args=ast.arguments(args=[ast.arg("cls", annotation=None)], vararg=[], kwonlyargs=[], kw_defaults=[], kwarg=[], defaults=[]), body=[
+        #         ast.Return(value=ast.Call(args=[ast.Name("cls", ast.Load)], keywords=[],
+        #                                   func=ast.Attribute(attr="__new__", ctx=ast.Load,
+        #                                                      value=ast.Call(func=ast.Name("super", ast.Load), args=[],
+        #                                                                     keywords=[]))))],
+        #                                      decorator_list=[], returns=None))
         new_body = self.if_exists(node.body, self.visit_list)
         new_bases = self.if_exists(node.bases, self.visit_list)
         new_keywords = self.if_exists(node.keywords, self.visit_list)
