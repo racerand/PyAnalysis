@@ -8,6 +8,7 @@ Håndter super
 Omskriv IsClassHeap til en unitær relation
 Kan ikke skelne metoder og funktioner statisk. Det giver et problem fordi første argument i metoder og funktioner skal håndteres meget forskelligt.
 Lige nu skelnes der ikke mellem metoder og funktioner defineret i metoder, hvilket er et problem da sidstnævnte ikke har en self.
+VCall lader til at være syntaktisk sukker for SCall. Undersøg om de kan forenes til en enkelt relation
 
 
 NOTER:
