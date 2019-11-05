@@ -7,24 +7,28 @@ rel SCall(var: Str, invo: Str, inMeth: Str)
 rel HeapIsFunction(heap: Str)
 rel PotentialAllocationSite(invo: Str, storeVar: Str, heap: Str, inMeth: Str)
 rel HeapIsClass(heap: Str, class: Str)
-rel IsClassFor(instanceHeap: Str, classHeap: Str)
 rel SelfVar(self: Str, method: Str)
 rel ClsVar(cls: Str, method: Str)
 //rel IsInitFor(heap: Str, method:Str)
-rel IsParentFor(heap: Str, parentHeap: Str)
 rel IsBaseFor(heap: Str, var: Str)
 rel IsNewFor(heap: Str, method: Str)
-rel IsParentTrans(child: Str, parent: Str)
 
 rel FormalArg(meth: Str, n: Str, arg: Str)
 rel ActualArg(invo: Str, n: Str, arg: Str)
 rel FormalReturn(meth: Str, ret: Str)
 rel ActualReturn(invo: Str, var: Str)
+
+// Generated on runtime
+rel IsClassFor(instanceHeap: Str, classHeap: Str)
+rel IsParentFor(heap: Str, parentHeap: Str)
+rel IsParentTrans(child: Str, parent: Str)
+
 rel VarPointsTo(var: Str, heap: Str)
 rel CallGraph(invo: Str, meth: Str)
 rel FldPointsTo(baseH: Str, fld: Str, heap: Str)
 rel InterProcAssign(to: Str, from: Str)
 rel Reachable(meth: Str)
+
 
 def getRules() : #{Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, PotentialAllocationSite, HeapIsClass,
  IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor,  IsNewFor, FormalArg, ActualArg, FormalReturn, ActualReturn} =  #{
