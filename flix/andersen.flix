@@ -19,18 +19,20 @@ rel FormalReturn(meth: Str, ret: Str)
 rel ActualReturn(invo: Str, var: Str)
 
 // Generated on runtime
-rel IsClassFor(instanceHeap: Str, classHeap: Str)
-rel IsParentFor(heap: Str, parentHeap: Str)
-rel IsParentTrans(child: Str, parent: Str)
+rel IsClassFor(instanceHeap: Str, instanceHCtx: Str, classHeap: Str, classHCtx: Str)
+rel IsParentFor(heap: Str, hctx: Str, parentHeap: Str, parentHCtx: Str)
+rel IsParentTrans(child: Str, hctx: Str, parent: Str, parentHCtx: Str)
 
-rel VarPointsTo(var: Str, heap: Str)
-rel CallGraph(invo: Str, meth: Str)
-rel FldPointsTo(baseH: Str, fld: Str, heap: Str)
-rel InterProcAssign(to: Str, from: Str)
-rel Reachable(meth: Str)
+rel VarPointsTo(var: Str, ctx: Str, heap: Str, hctx: Str)
+rel CallGraph(invo: Str, callerCtx: Str, meth: Str, calleCtx: Str)
+rel FldPointsTo(baseH: Str, baseHCtx: Str, fld: Str, heap: Str, hctx: Str)
+rel InterProcAssign(to: Str, toCtx: Str, from: Str, fromCtx: Str)
+rel Reachable(meth: Str, ctx: Str)
 
+def merge(heap: Str, hctx: Str, invo: Str, ctx: Str) : Str = invo
+def record(heap: Str, ctx: Str) : Str = ctx
 
-def getRules() : #{Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, PotentialAllocationSite, HeapIsClass,
+def getRules(merge: Str -> Str -> Str -> Str -> Str, record : Str -> Str -> Str) : #{Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, PotentialAllocationSite, HeapIsClass,
  IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
   ActualReturn, VarPointsTo, CallGraph, FldPointsTo, InterProcAssign, Reachable} =  #{
     //Standard relations present in all programs
@@ -154,7 +156,7 @@ def main(): #{  Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, Potentia
   ActualReturn, VarPointsTo, CallGraph, FldPointsTo, InterProcAssign, Reachable} =
 
     let movePath = Path.new("output.csv");
-    let rules = getRules();
+    let rules = getRules(merge, record);
     match readMoveFacts(movePath) with {
         case Ok(facts) =>
             let result = solve (facts <+> rules);

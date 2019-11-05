@@ -171,7 +171,6 @@ class AndersenAnalysis(ast.NodeVisitor):
         self.current_class_heap = tmpHeap
         self.current_class = tmp
 
-
 rewriteVisitor = RewriteName()
 normalizedAST = rewriteVisitor.visit(ast_node)
 treeDumpFile.write(astpretty.pformat(normalizedAST, show_offsets=False))
