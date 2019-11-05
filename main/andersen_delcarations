@@ -32,6 +32,8 @@ rel Reachable(meth: Str)
 HeapIsClass("HObject", "HClass").
 VarPointsTo("object", "HObject").
 FldPointsTo("HObject", "__new__", "ObjectNew").
+HeapIsFunction("HSuper").
+VarPointsTo("super", "HSuper").
 
 // Declare some conStraints.
 VarPointsTo(var, heap) :- Reachable(meth), Alloc(var, heap, meth).
@@ -111,3 +113,8 @@ HeapIsFunction(method), SelfVar(self, method).
 //    SCall(var, invo, inMeth), VarPointsTo(var, callHeap), HeapIsClass(callHeap, classHeap), IsInitFor(callHeap, toMeth),
 //        SelfVar(self, toMeth).
 IsParentFor(heap, parentHeap) :- IsBaseFor(heap,var), VarPointsTo(var, parentHeap), HeapIsClass(parentHeap, class).
+
+//Handle super
+VarPointsTo(storeVar, parentHeap) :- ActualReturn(invo, storeVar), SCall(var, invo, inMeth), Reachable(inMeth),
+VarPointsTo(var, "HSuper"), HeapIsClass(classHeap, class), IsParentFor(classHeap, parentHeap),
+FldPointsTo(classHeap, fld, inMeth).
