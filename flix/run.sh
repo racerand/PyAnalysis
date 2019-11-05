@@ -1,0 +1,1 @@
+java -jar flix.jar andersen.flix

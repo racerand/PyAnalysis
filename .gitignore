@@ -1,2 +1,4 @@
 venv/*
 *.gv
+/flix/flix.jar
+/flix/output

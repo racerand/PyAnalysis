@@ -27,75 +27,75 @@ rel FldPointsTo(baseH: Str, fld: Str, heap: Str)
 rel InterProcAssign(to: Str, from: Str)
 rel Reachable(meth: Str)
 
-//Standard relations present in all programs
-HeapIsClass("HObject", "HClass").
-VarPointsTo("object", "HObject").
-FldPointsTo("HObject", "__new__", "ObjectNew").
-HeapIsFunction("HSuper").
-VarPointsTo("super", "HSuper").
+    //Standard relations present in all programs
+    HeapIsClass("HObject", "HClass").
+    VarPointsTo("object", "HObject").
+    FldPointsTo("HObject", "__new__", "ObjectNew").
+    HeapIsFunction("HSuper").
+    VarPointsTo("super", "HSuper").
 
-// Declare some conStraints.
-VarPointsTo(var, heap) :- Reachable(meth), Alloc(var, heap, meth).
-VarPointsTo(to, heap) :- Move(to, from), VarPointsTo(from, heap).
-FldPointsTo(baseH, fld, heap) :- Store(base, fld, from), VarPointsTo(from, heap),
-    VarPointsTo(base, baseH).
-VarPointsTo(to, heap) :- Load(to, base, fld), VarPointsTo(base, baseH), FldPointsTo(baseH,fld,heap).
-Reachable(fldHeap) :- VCall(base, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(base, baseHeap),
-    FldPointsTo(baseHeap, fld, fldHeap), HeapIsFunction(fldHeap).
-CallGraph(invo, fldHeap) :- VCall(base, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(base, baseHeap),
-    FldPointsTo(baseHeap, fld, fldHeap), HeapIsFunction(fldHeap).
-VarPointsTo(self, baseHeap):- VCall(base, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(base, baseHeap),
-    FldPointsTo(baseHeap, fld, fldHeap), HeapIsFunction(fldHeap), SelfVar(self, fldHeap).
-InterProcAssign(to,from) :- CallGraph(invo, meth), FormalArg(meth, n, to), ActualArg(invo, n, from).
-InterProcAssign(to,from) :- CallGraph(invo, meth), FormalReturn(meth, from), ActualReturn(invo, to).
-VarPointsTo(to, heap) :- InterProcAssign(to, from), VarPointsTo(from, heap).
-Reachable(heap) :- SCall(var, invo, inMeth), Reachable(inMeth), VarPointsTo(var, heap), HeapIsFunction(heap).
-CallGraph(invo, heap) :- SCall(var, invo, inMeth), Reachable(inMeth), VarPointsTo(var, heap), HeapIsFunction(heap).
+    // Declare some conStraints.
+    VarPointsTo(var, heap) :- Reachable(meth), Alloc(var, heap, meth).
+    VarPointsTo(to, heap) :- Move(to, from), VarPointsTo(from, heap).
+    FldPointsTo(baseH, fld, heap) :- Store(base, fld, from), VarPointsTo(from, heap),
+        VarPointsTo(base, baseH).
+    VarPointsTo(to, heap) :- Load(to, base, fld), VarPointsTo(base, baseH), FldPointsTo(baseH,fld,heap).
+    Reachable(fldHeap) :- VCall(base, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(base, baseHeap),
+        FldPointsTo(baseHeap, fld, fldHeap), HeapIsFunction(fldHeap).
+    CallGraph(invo, fldHeap) :- VCall(base, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(base, baseHeap),
+        FldPointsTo(baseHeap, fld, fldHeap), HeapIsFunction(fldHeap).
+    VarPointsTo(self, baseHeap):- VCall(base, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(base, baseHeap),
+        FldPointsTo(baseHeap, fld, fldHeap), HeapIsFunction(fldHeap), SelfVar(self, fldHeap).
+    InterProcAssign(to,from) :- CallGraph(invo, meth), FormalArg(meth, n, to), ActualArg(invo, n, from).
+    InterProcAssign(to,from) :- CallGraph(invo, meth), FormalReturn(meth, from), ActualReturn(invo, to).
+    VarPointsTo(to, heap) :- InterProcAssign(to, from), VarPointsTo(from, heap).
+    Reachable(heap) :- SCall(var, invo, inMeth), Reachable(inMeth), VarPointsTo(var, heap), HeapIsFunction(heap).
+    CallGraph(invo, heap) :- SCall(var, invo, inMeth), Reachable(inMeth), VarPointsTo(var, heap), HeapIsFunction(heap).
 
-//Allocate an object with the right class if we encounter a static call to ObjectNew
-IsClassFor(heap, classHeap) :- SCall(var, invo, inMeth), VarPointsTo(var, "ObjectNew"), PotentialAllocationSite(invo, storeVar, heap, inMeth),
-    ActualArg(invo, "0", clsVar), VarPointsTo(clsVar, classHeap).
-Alloc(storeVar, heap, inMeth) :- SCall(var, invo, inMeth), VarPointsTo(var, "ObjectNew"), PotentialAllocationSite(invo, storeVar, heap, inMeth).
-IsClassFor(heap, classHeap) :- VCall(base, fld, invo, inMeth), VarPointsTo(base, baseHeap), FldPointsTo(baseHeap, fld, "ObjectNew"), PotentialAllocationSite(invo, storeVar, heap, inMeth),
-    ActualArg(invo, "0", clsVar), VarPointsTo(clsVar, classHeap).
-Alloc(storeVar, heap, inMeth) :- VCall(base, fld, invo, inMeth), VarPointsTo(base, baseHeap), FldPointsTo(baseHeap, fld, "ObjectNew"),
- PotentialAllocationSite(invo, storeVar, heap, inMeth).
+    //Allocate an object with the right class if we encounter a static call to ObjectNew
+    IsClassFor(heap, classHeap) :- SCall(var, invo, inMeth), VarPointsTo(var, "ObjectNew"), PotentialAllocationSite(invo, storeVar, heap, inMeth),
+        ActualArg(invo, "0", clsVar), VarPointsTo(clsVar, classHeap).
+    Alloc(storeVar, heap, inMeth) :- SCall(var, invo, inMeth), VarPointsTo(var, "ObjectNew"), PotentialAllocationSite(invo, storeVar, heap, inMeth).
+    IsClassFor(heap, classHeap) :- VCall(base, fld, invo, inMeth), VarPointsTo(base, baseHeap), FldPointsTo(baseHeap, fld, "ObjectNew"), PotentialAllocationSite(invo, storeVar, heap, inMeth),
+        ActualArg(invo, "0", clsVar), VarPointsTo(clsVar, classHeap).
+    Alloc(storeVar, heap, inMeth) :- VCall(base, fld, invo, inMeth), VarPointsTo(base, baseHeap), FldPointsTo(baseHeap, fld, "ObjectNew"),
+     PotentialAllocationSite(invo, storeVar, heap, inMeth).
 
-//Call the __new__ method of a class if there exist a SCall on the class, does the same for all parent definitions of __new__
-Reachable(toMeth) :- SCall(var, invo, inMeth), Reachable(inMeth), VarPointsTo(var, heap), HeapIsClass(heap, classHeap),
-    IsParentTrans(heap, parentHeap), IsNewFor(parentHeap, toMeth).
-CallGraph(invo, toMeth) :- SCall(var, invo, inMeth), VarPointsTo(var, classHeap), HeapIsClass(classHeap, class),
- IsParentTrans(classHeap, parentHeap), IsNewFor(parentHeap, toMeth).
-VarPointsTo(cls, classHeap) :- SCall(var, invo, inMeth), VarPointsTo(var, classHeap), HeapIsClass(classHeap, class),
- IsParentTrans(classHeap, parentHeap), IsNewFor(parentHeap, toMeth), ClsVar(cls, toMeth).
+    //Call the __new__ method of a class if there exist a SCall on the class, does the same for all parent definitions of __new__
+    Reachable(toMeth) :- SCall(var, invo, inMeth), Reachable(inMeth), VarPointsTo(var, heap), HeapIsClass(heap, classHeap),
+        IsParentTrans(heap, parentHeap), IsNewFor(parentHeap, toMeth).
+    CallGraph(invo, toMeth) :- SCall(var, invo, inMeth), VarPointsTo(var, classHeap), HeapIsClass(classHeap, class),
+     IsParentTrans(classHeap, parentHeap), IsNewFor(parentHeap, toMeth).
+    VarPointsTo(cls, classHeap) :- SCall(var, invo, inMeth), VarPointsTo(var, classHeap), HeapIsClass(classHeap, class),
+     IsParentTrans(classHeap, parentHeap), IsNewFor(parentHeap, toMeth), ClsVar(cls, toMeth).
 
-//Whenever we call on a class, we must call all inherited definitions of __new__, we know that we must always inherit from object.
-//Therefore we always create an alloc whenever we see a call of class
-Alloc(storeVar, heap, inMeth) :- SCall(var, invo, inMeth), VarPointsTo(var, classHeap),
- HeapIsClass(classHeap, class), PotentialAllocationSite(invo, storeVar, heap, inMeth).
-IsClassFor(heap, classHeap) :- SCall(var, invo, inMeth), VarPointsTo(var, classHeap), PotentialAllocationSite(invo, storeVar, heap, inMeth),
-    HeapIsClass(classHeap, class).
+    //Whenever we call on a class, we must call all inherited definitions of __new__, we know that we must always inherit from object.
+    //Therefore we always create an alloc whenever we see a call of class
+    Alloc(storeVar, heap, inMeth) :- SCall(var, invo, inMeth), VarPointsTo(var, classHeap),
+     HeapIsClass(classHeap, class), PotentialAllocationSite(invo, storeVar, heap, inMeth).
+    IsClassFor(heap, classHeap) :- SCall(var, invo, inMeth), VarPointsTo(var, classHeap), PotentialAllocationSite(invo, storeVar, heap, inMeth),
+        HeapIsClass(classHeap, class).
 
-//Calculate IsParentTrans, which is the transitive and reflective closure of the IsParentFor relation.
-IsParentTrans(child, parent) :- IsParentFor(child, parent).
-IsParentTrans(classHeap, classHeap) :- HeapIsClass(classHeap, class).
-IsParentTrans(child, gparent) :- IsParentTrans(child, parent), IsParentTrans(parent, gparent).
+    //Calculate IsParentTrans, which is the transitive and reflective closure of the IsParentFor relation.
+    IsParentTrans(child, parent) :- IsParentFor(child, parent).
+    IsParentTrans(classHeap, classHeap) :- HeapIsClass(classHeap, class).
+    IsParentTrans(child, gparent) :- IsParentTrans(child, parent), IsParentTrans(parent, gparent).
 
-//We must call all inherited functions.
-CallGraph(invo, method) :- VCall(childVar, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(childVar, childHeap),
-    IsClassFor(childHeap, classHeap), IsParentTrans(classHeap, parentHeap), FldPointsTo(parentHeap, fld, method),
-    HeapIsFunction(method).
-Reachable(method) :- VCall(childVar, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(childVar, childHeap),
-    IsClassFor(childHeap, classHeap), IsParentTrans(classHeap, parentHeap), FldPointsTo(parentHeap, fld, method),
-    HeapIsFunction(method).
-VarPointsTo(self, childHeap):- VCall(childVar, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(childVar, childHeap),
-    IsClassFor(childHeap, classHeap), IsParentTrans(classHeap, parentHeap), FldPointsTo(parentHeap, fld, method),
-    HeapIsFunction(method), SelfVar(self, method).
+    //We must call all inherited functions.
+    CallGraph(invo, method) :- VCall(childVar, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(childVar, childHeap),
+        IsClassFor(childHeap, classHeap), IsParentTrans(classHeap, parentHeap), FldPointsTo(parentHeap, fld, method),
+        HeapIsFunction(method).
+    Reachable(method) :- VCall(childVar, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(childVar, childHeap),
+        IsClassFor(childHeap, classHeap), IsParentTrans(classHeap, parentHeap), FldPointsTo(parentHeap, fld, method),
+        HeapIsFunction(method).
+    VarPointsTo(self, childHeap):- VCall(childVar, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(childVar, childHeap),
+        IsClassFor(childHeap, classHeap), IsParentTrans(classHeap, parentHeap), FldPointsTo(parentHeap, fld, method),
+        HeapIsFunction(method), SelfVar(self, method).
 
-//Derive actual parents from the names given statically in the constructors
-IsParentFor(heap, parentHeap) :- IsBaseFor(heap,var), VarPointsTo(var, parentHeap), HeapIsClass(parentHeap, class).
+    //Derive actual parents from the names given statically in the constructors
+    IsParentFor(heap, parentHeap) :- IsBaseFor(heap,var), VarPointsTo(var, parentHeap), HeapIsClass(parentHeap, class).
 
-//Handle super.
-VarPointsTo(storeVar, parentHeap) :- ActualReturn(invo, storeVar), SCall(var, invo, inMeth), Reachable(inMeth),
-    VarPointsTo(var, "HSuper"), HeapIsClass(classHeap, class), IsParentFor(classHeap, parentHeap),
-    FldPointsTo(classHeap, fld, inMeth).
+    //Handle super.
+    VarPointsTo(storeVar, parentHeap) :- ActualReturn(invo, storeVar), SCall(var, invo, inMeth), Reachable(inMeth),
+        VarPointsTo(var, "HSuper"), HeapIsClass(classHeap, class), IsParentFor(classHeap, parentHeap),
+        FldPointsTo(classHeap, fld, inMeth).
