@@ -61,7 +61,7 @@ class AndersenAnalysis(ast.NodeVisitor):
         self.current_stmt = stmt_name
         if isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Name):
             f.write("Move(\"{}\",\"{}\"). \n".format(node.targets[0].id, node.value.id))
-            f2.write("Move, {}, {} \n".format(node.targets[0].id, node.value.id))
+            f2.write("Move, {}, {}\n".format(node.targets[0].id, node.value.id))
         if isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Attribute):
             f.write("Load(\"{}\",\"{}\",\"{}\").\n".format(node.targets[0].id, node.value.value.id, node.value.attr))
             f2.write("Load, {}, {}, {}\n".format(node.targets[0].id, node.value.value.id, node.value.attr))
@@ -69,7 +69,7 @@ class AndersenAnalysis(ast.NodeVisitor):
             f.write(
                 "Store(\"{}\",\"{}\",\"{}\").\n".format(node.targets[0].value.id, node.targets[0].attr, node.value.id))
             f2.write(
-                "Store, {}, {}, {} \n".format(node.targets[0].value.id, node.targets[0].attr, node.value.id))
+                "Store, {}, {}, {}\n".format(node.targets[0].value.id, node.targets[0].attr, node.value.id))
         if isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Call):
             f.write("PotentialAllocationSite(\"{}\",\"{}\",\"{}\",\"{}\").\n".format(
                 self.current_stmt, node.targets[0].id, self.unique_name("H"), self.current_meth
@@ -122,7 +122,7 @@ class AndersenAnalysis(ast.NodeVisitor):
                 f2.write("ClsVar, {}, {}\n".format(node.args.args[0].arg, heapName))
             else:
                 f.write("SelfVar(\"{}\",\"{}\").\n".format(node.args.args[0].arg, heapName))
-                f2.write("SelfVar, {}, {} \n".format(node.args.args[0].arg, heapName))
+                f2.write("SelfVar, {}, {}\n".format(node.args.args[0].arg, heapName))
             if node.args:
                 for i, arg in enumerate(node.args.args):
                     if (i != 0):
@@ -130,7 +130,7 @@ class AndersenAnalysis(ast.NodeVisitor):
                         f2.write("FormalArg, {}, {}, {}\n".format(heapName, i - 1, arg.arg))
             if node.name == "__init__":
                 f.write("IsInitFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, heapName))
-                f2.write("IsInitFor {}, {} \n".format(self.current_class_heap, heapName))
+                f2.write("IsInitFor {}, {}\n".format(self.current_class_heap, heapName))
             if node.name == "__new__":
                 f.write("IsNewFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, heapName))
                 f2.write("IsNewFor, {}, {}\n".format(self.current_class_heap, heapName))
