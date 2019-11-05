@@ -31,8 +31,10 @@ rel Reachable(meth: Str)
 
 
 def getRules() : #{Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, PotentialAllocationSite, HeapIsClass,
- IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor,  IsNewFor, FormalArg, ActualArg, FormalReturn, ActualReturn} =  #{
+ IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
+  ActualReturn, VarPointsTo, CallGraph, FldPointsTo, InterProcAssign, Reachable} =  #{
     //Standard relations present in all programs
+        Reachable("root").
         HeapIsClass("HObject", "HClass").
         VarPointsTo("object", "HObject").
         FldPointsTo("HObject", "__new__", "ObjectNew").
@@ -106,9 +108,10 @@ def getRules() : #{Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, Poten
             FldPointsTo(classHeap, fld, inMeth).
     }
 
-def getFact(s: Str): #{ Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, PotentialAllocationSite, HeapIsClass,
- SelfVar, ClsVar, IsBaseFor, IsNewFor, FormalArg, ActualArg, FormalReturn, ActualReturn} =
-    let parts = String.split(s, ",");
+def getFact(s: Str): #{  Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, PotentialAllocationSite, HeapIsClass,
+ IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
+  ActualReturn, VarPointsTo, CallGraph, FldPointsTo, InterProcAssign, Reachable} =
+    let parts = String.split(s, ", ");
      match parts[0] with {
         case "Move" => Move(parts[1], parts[2]).
         case "Alloc" => Alloc(parts[1], parts[2], parts[3]).
@@ -133,23 +136,28 @@ def getFact(s: Str): #{ Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, 
      }
 
 def getFacts(l: List[Str]): #{  Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, PotentialAllocationSite, HeapIsClass,
- SelfVar, ClsVar, IsBaseFor, IsNewFor, FormalArg, ActualArg, FormalReturn, ActualReturn } =
+ IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
+  ActualReturn, VarPointsTo, CallGraph, FldPointsTo, InterProcAssign, Reachable } =
     match l with {
         case Nil => #{ }
         case x :: xs => getFact(x) <+> getFacts(xs)
     }
 
-def readMoveFacts(path: Path): Result[#{  Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, PotentialAllocationSite, HeapIsClass,
- SelfVar, ClsVar, IsBaseFor, IsNewFor, FormalArg, ActualArg, FormalReturn, ActualReturn },
+def readMoveFacts(path: Path): Result[#{   Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, PotentialAllocationSite, HeapIsClass,
+ IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
+  ActualReturn, VarPointsTo, CallGraph, FldPointsTo, InterProcAssign, Reachable},
                                   Path.IOError] =
     Result.map(getFacts, Path.readLines(path))
 
 def main(): #{  Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, PotentialAllocationSite, HeapIsClass,
- SelfVar, ClsVar, IsBaseFor, IsNewFor, FormalArg, ActualArg, FormalReturn, ActualReturn } =
+ IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
+  ActualReturn, VarPointsTo, CallGraph, FldPointsTo, InterProcAssign, Reachable} =
 
     let movePath = Path.new("output.csv");
+    let rules = getRules();
     match readMoveFacts(movePath) with {
         case Ok(facts) =>
-            solve (facts)
+            let result = solve (facts <+> rules);
+             (project VarPointsTo result) <+> (project Reachable result)
         case Err(_) => ??? // implement proper error handling.
     }
