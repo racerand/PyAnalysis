@@ -141,8 +141,8 @@ class AndersenAnalysis(ast.NodeVisitor):
                 for i, arg in enumerate(node.args.args):
                     f.write("FormalArg(\"{}\",\"{}\",\"{}\").\n".format(heapName, i, arg.arg))
                     f2.write("FormalArg, {}, {}, {}\n".format(heapName, i, arg.arg))
-        f.write("HeapIsFunction(\"{}\").\n".format(heapName))
-        f2.write("HeapIsFunction, {}\n".format(heapName))
+        f.write("ObjectIsFunction(\"{}\").\n".format(heapName))
+        f2.write("ObjectIsFunction, {}\n".format(heapName))
         temp = self.current_meth
         self.visit(node.args)
         if_exists(node.decorator_list, self.visit_list)
@@ -163,8 +163,8 @@ class AndersenAnalysis(ast.NodeVisitor):
         self.current_class_heap = heapName
         f.write("Alloc(\"{}\",\"{}\",\"{}\").\n".format(node.name, heapName, self.current_meth))
         f2.write("Alloc, {}, {}, {}\n".format(node.name, heapName, self.current_meth))
-        f.write("HeapIsClass(\"{}\",\"{}\").\n".format(heapName, self.unique_name("Class")))
-        f2.write("HeapIsClass, {}, {}\n".format(heapName, self.unique_name("Class")))
+        f.write("ObjectIsClass(\"{}\",\"{}\").\n".format(heapName, self.unique_name("Class")))
+        f2.write("ObjectIsClass, {}, {}\n".format(heapName, self.unique_name("Class")))
         f.write("IsBaseFor(\"{}\",\"{}\").\n".format(heapName, node.bases[0].id))
         f2.write("IsBaseFor, {}, {}\n".format(heapName, node.bases[0].id))
         self.generic_visit(node)

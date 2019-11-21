@@ -1,29 +1,29 @@
 /// Declare the relations used in our analysis.
-rel Alloc(var: Str, heap: Str, inMeth: Str)
+rel Alloc(var: Str, object: Str, inMeth: Str)
 rel Move(to: Str, from: Str)
 rel Load(to: Str, base: Str, fld: Str)
 rel Store(base: Str, fld: Str, from: Str)
 rel VCall(base: Str, var: Str, invo: Str, inMeth: Str)
 rel SCall(var: Str, invo: Str, inMeth: Str)
-rel HeapIsFunction(heap: Str)
-rel PotentialAllocationSite(invo: Str, storeVar: Str, heap: Str, inMeth: Str)
-rel HeapIsClass(heap: Str, class: Str)
-rel IsClassFor(instanceHeap: Str, classHeap: Str)
+rel ObjectIsFunction(object: Str)
+rel PotentialAllocationSite(invo: Str, storeVar: Str, object: Str, inMeth: Str)
+rel ObjectIsClass(object: Str, class: Str)
+rel IsClassFor(instanceObject: Str, classObject: Str)
 rel SelfVar(self: Str, method: Str)
 rel ClsVar(cls: Str, method: Str)
 //rel IsInitFor(heap: Str, method:Str)
-rel IsParentFor(heap: Str, parentHeap: Str)
-rel IsBaseFor(heap: Str, var: Str)
-rel IsNewFor(heap: Str, method: Str)
+rel IsParentFor(classObject: Str, parentClassObject: Str)
+rel IsBaseFor(classObject: Str, baseVar: Str)
+rel IsNewFor(classObject: Str, method: Str)
 rel IsParentTrans(child: Str, parent: Str)
 
 rel FormalArg(meth: Str, n: Str, arg: Str)
 rel ActualArg(invo: Str, n: Str, arg: Str)
 rel FormalReturn(meth: Str, ret: Str)
 rel ActualReturn(invo: Str, var: Str)
-rel VarPointsTo(var: Str, heap: Str)
+rel VarPointsTo(var: Str, object: Str)
 rel CallGraph(invo: Str, meth: Str)
-rel FldPointsTo(baseH: Str, fld: Str, heap: Str)
+rel FldPointsTo(baseObject: Str, fld: Str, object: Str)
 rel InterProcAssign(to: Str, from: Str)
 rel Reachable(meth: Str)
 
@@ -35,13 +35,13 @@ rel Reachable(meth: Str)
     VarPointsTo("super", "HSuper").
 
     // Declare some conStraints.
-    VarPointsTo(var, heap) :- Reachable(meth), Alloc(var, heap, meth).
-    VarPointsTo(to, heap) :- Move(to, from), VarPointsTo(from, heap).
-    FldPointsTo(baseH, fld, heap) :- Store(base, fld, from), VarPointsTo(from, heap),
-        VarPointsTo(base, baseH).
-    VarPointsTo(to, heap) :- Load(to, base, fld), VarPointsTo(base, baseH), FldPointsTo(baseH,fld,heap).
-    Reachable(fldHeap) :- VCall(base, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(base, baseHeap),
-        FldPointsTo(baseHeap, fld, fldHeap), HeapIsFunction(fldHeap).
+    VarPointsTo(var, object) :- Reachable(meth), Alloc(var, object, meth).
+    VarPointsTo(to, object) :- Move(to, from), VarPointsTo(from, object).
+    FldPointsTo(baseObject, fld, object) :- Store(base, fld, from), VarPointsTo(from, object),
+        VarPointsTo(base, baseObject).
+    VarPointsTo(to, object) :- Load(to, base, fld), VarPointsTo(base, baseObject), FldPointsTo(baseObject,fld,object).
+    Reachable(fldObject) :- VCall(base, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(base, baseObject),
+        FldPointsTo(baseObject, fld, fldObject), HeapIsFunction(fldObject).
     CallGraph(invo, fldHeap) :- VCall(base, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(base, baseHeap),
         FldPointsTo(baseHeap, fld, fldHeap), HeapIsFunction(fldHeap).
     VarPointsTo(self, baseHeap):- VCall(base, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(base, baseHeap),

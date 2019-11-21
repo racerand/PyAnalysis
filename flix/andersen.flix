@@ -29,14 +29,14 @@ rel FldPointsTo(baseH: Str, baseHCtx: Str, fld: Str, heap: Str, hctx: Str)
 rel InterProcAssign(to: Str, toCtx: Str, from: Str, fromCtx: Str)
 rel Reachable(meth: Str, ctx: Str)
 
-def merge(heap: Str, hctx: Str, invo: Str, ctx: Str) : Str = invo
-def record(heap: Str, ctx: Str) : Str = ctx
+def merge(_heap: Str, _hctx: Str, invo: Str, _ctx: Str) : Str = invo
+def record(_heap: Str, ctx: Str) : Str = ctx
 
-def getRules(merge: Str -> Str -> Str -> Str -> Str, record : Str -> Str -> Str) : #{Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, PotentialAllocationSite, HeapIsClass,
+def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #{Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, PotentialAllocationSite, HeapIsClass,
  IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
   ActualReturn, VarPointsTo, CallGraph, FldPointsTo, InterProcAssign, Reachable} =  #{
     //Standard relations present in all programs
-        Reachable("root").
+        Reachable("root", "").
         HeapIsClass("HObject", "HClass").
         VarPointsTo("object", "HObject").
         FldPointsTo("HObject", "__new__", "ObjectNew").
@@ -44,17 +44,21 @@ def getRules(merge: Str -> Str -> Str -> Str -> Str, record : Str -> Str -> Str)
         VarPointsTo("super", "HSuper").
 
         // Declare some conStraints.
-        VarPointsTo(var, heap) :- Reachable(meth), Alloc(var, heap, meth).
-        VarPointsTo(to, heap) :- Move(to, from), VarPointsTo(from, heap).
-        FldPointsTo(baseH, fld, heap) :- Store(base, fld, from), VarPointsTo(from, heap),
-            VarPointsTo(base, baseH).
-        VarPointsTo(to, heap) :- Load(to, base, fld), VarPointsTo(base, baseH), FldPointsTo(baseH,fld,heap).
-        Reachable(fldHeap) :- VCall(base, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(base, baseHeap),
-            FldPointsTo(baseHeap, fld, fldHeap), HeapIsFunction(fldHeap).
+        VarPointsTo(var, ctx, heap, record(heap, ctx)) :- Reachable(meth, ctx), Alloc(var, heap, meth).
+        VarPointsTo(to, ctx, heap, hctx) :- Move(to, from), VarPointsTo(from, ctx, heap, hctx).
+        FldPointsTo(baseH, baseHCtx, fld, heap, hctx) :- Store(base, fld, from), VarPointsTo(from, ctx, heap, hctx),
+            VarPointsTo(base, ctx, baseH, baseHCtx).
+        VarPointsTo(to, ctx, heap, hctx) :- Load(to, base, fld), VarPointsTo(base, ctx, baseH, baseHCtx),
+            FldPointsTo(baseH, baseHCtx, fld, heap, hctx).
+
+        Reachable(fldHeap, merge(baseHeap, baseHCtx, invo, callerCtx)) :- VCall(base, fld, invo, inMeth), Reachable(inMeth, callerCtx), VarPointsTo(base, callerCtx, baseHeap, baseHCtx),
+            FldPointsTo(baseHeap, baseHCtx, fld, fldHeap, hctx), HeapIsFunction(fldHeap).
+
         CallGraph(invo, fldHeap) :- VCall(base, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(base, baseHeap),
             FldPointsTo(baseHeap, fld, fldHeap), HeapIsFunction(fldHeap).
         VarPointsTo(self, baseHeap):- VCall(base, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(base, baseHeap),
             FldPointsTo(baseHeap, fld, fldHeap), HeapIsFunction(fldHeap), SelfVar(self, fldHeap).
+
         InterProcAssign(to,from) :- CallGraph(invo, meth), FormalArg(meth, n, to), ActualArg(invo, n, from).
         InterProcAssign(to,from) :- CallGraph(invo, meth), FormalReturn(meth, from), ActualReturn(invo, to).
         VarPointsTo(to, heap) :- InterProcAssign(to, from), VarPointsTo(from, heap).
