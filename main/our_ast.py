@@ -250,6 +250,7 @@ class RewriteName(ast.NodeTransformer):
         self.namespace_map[self.namespace_list[-1]][node.name] = unique_func_name
         self.namespace_list.append(node.name)
         self.namespace_map[node.name] = {}
+        node.name = unique_func_name
 
         tmp_scope = self.current_scope_is_class
         self.current_scope_is_class = False
