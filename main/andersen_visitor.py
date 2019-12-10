@@ -106,13 +106,13 @@ class AndersenAnalysis(ast.NodeVisitor):
             f2.write(
                 "VCall, {}, {}, {}, {}\n".format(node.func.value.id, node.func.attr, self.current_stmt,
                                                                self.current_meth))
-            if node.func.value.id not in self.current_function_defined:
-                self.current_function_undefined.append(node.func.value.id)
+            #if node.func.value.id not in self.current_function_defined:
+            #   self.current_function_undefined.append(node.func.value.id)
         if isinstance(node.func, ast.Name):
             f.write("SCall(\"{}\",\"{}\",\"{}\").\n".format(node.func.id, self.current_stmt, self.current_meth))
             f2.write("SCall, {}, {}, {}\n".format(node.func.id, self.current_stmt, self.current_meth))
-            if node.func.id not in self.current_function_defined:
-                self.current_function_undefined.append(node.func.id)
+            #if node.func.id not in self.current_function_defined:
+            #   self.current_function_undefined.append(node.func.id)
         for i, arg in enumerate(node.args):
             f.write("ActualArg(\"{}\",\"{}\",\"{}\").\n".format(self.current_stmt, i, arg.id))
             f2.write("ActualArg, {}, {}, {}\n".format(self.current_stmt, i, arg.id))
@@ -176,7 +176,6 @@ class AndersenAnalysis(ast.NodeVisitor):
         if_exists(node.returns, self.visit)
         self.current_meth = temp
         for undef in self.current_function_undefined:
-            print("OutOfScopeIn, {}, {}\n".format(undef, heapName))
             f2.write("OutOfScopeIn, {}, {}\n".format(undef, heapName))
         for undef in self.current_function_undefined:
             if undef not in tmp_current_function_defined:

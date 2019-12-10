@@ -21,7 +21,7 @@ class Tripple(Pair):
     def __init__(self, fst, snd, trd) -> None:
         super().__init__(fst, snd)
         self.trd = trd
-""""
+
 x = Pair(1,2)
 def baz():
     x = Tripple(1,2,3)
@@ -30,10 +30,4 @@ def baz():
         return y
     foo()
     print(x)
-baz()
-"""
-z = Pair(1,2)
-x = Tripple(1,2,3)
-def baz():
-    x.y = z
 baz()
