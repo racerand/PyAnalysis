@@ -15,9 +15,6 @@ def fib(n, ):
     return l
 
 
-ast_node = ast.parse(inspect.getsource(tests.constructor_sound_first))
-
-
 class RewriteName(ast.NodeTransformer):
     def __init__(self) -> None:
         super().__init__()
@@ -340,17 +337,23 @@ class RewriteName(ast.NodeTransformer):
         return return_list
 
     def visit_Name(self, node):
-        new_name = self.lookup_name(node.id)
-        if isinstance(node.ctx, ast.Store) and new_name is None:
-            new_name = self.unique_scoped_name(node.id)
+        if isinstance(node.ctx, ast.Store):
             this_scope = self.namespace_list[-1]
-            self.namespace_map[this_scope][node.id] = new_name
-
-        if new_name is not None:
-            node.id = new_name
+            # Check if the name is define in the local scope
+            if node.id not in self.namespace_map[this_scope]:
+                # If not we define a new name
+                new_name = self.unique_scoped_name(node.id)
+                self.namespace_map[this_scope][node.id] = new_name
+                node.id = new_name
+            else:
+                node.id = self.namespace_map[this_scope][node.id]
         else:
-            print("We're trying to load " + node.id + ", which is not in the environment "
-                  + "".join(self.namespace_list))
+            new_name = self.lookup_name(node.id)
+            if new_name is not None:
+                node.id = new_name
+            else:
+                print("We're trying to load " + node.id + ", which is not in the environment "
+                      + "".join(self.namespace_list))
         return node
 
     def visit_arg(self, node):
@@ -384,12 +387,14 @@ def is_constant_value(node):
     return isinstance(node, ast.Name) or isinstance(node, ast.Num) or isinstance(node, ast.Str) \
            or isinstance(node, ast.Bytes) or isinstance(node, ast.NameConstant) or isinstance(node, ast.Constant)
 
+if __name__ == '__main__':
+    ast_node = ast.parse(inspect.getsource(tests.testScopedNames))
 
-rn = RewriteName()
-ast_node = rn.visit(ast_node)
+    rn = RewriteName()
+    ast_node = rn.visit(ast_node)
 
-graph = to_graph(gen_cfg("", ast_node=ast_node))
+    graph = to_graph(gen_cfg("", ast_node=ast_node))
 
-# to_graph does not like Try and error names
+    # to_graph does not like Try and error names
 
-Source(graph).save()
+    Source(graph).save()

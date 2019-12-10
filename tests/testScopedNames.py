@@ -31,3 +31,7 @@ x = Fib(1, 2)
 
 y = x.foo(2)
 x = 2
+
+def baz():
+    x = 3
+    return x
