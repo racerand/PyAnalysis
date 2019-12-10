@@ -6,11 +6,12 @@ import astpretty
 import tests.python_features.isinstance_example2
 import tests.constructor_sound_first
 import tests.test_super_3
+import tests.function_context
 import tests.python_features.bases
 from our_ast import RewriteName
 from util import if_exists
 
-ast_node = ast.parse(inspect.getsource(tests.python_features.bases))
+ast_node = ast.parse(inspect.getsource(tests.function_context))
 
 f = open('../flix/output', 'w')
 f2 = open('../flix/output.csv', 'w')
@@ -151,10 +152,10 @@ class AndersenAnalysis(ast.NodeVisitor):
                         f.write("FormalArg(\"{}\",\"{}\",\"{}\").\n".format(heapName, i - 1, arg.arg))
                         f2.write("FormalArg, {}, {}, {}\n".format(heapName, i - 1, arg.arg))
             if node.name == "__init__":
-                f.write("IsInitFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, heapName))
+                #f.write("IsInitFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, heapName))
                 #f2.write("IsInitFor {}, {}\n".format(self.current_class_heap, heapName))
             if node.name == "__new__":
-                f.write("IsNewFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, heapName))
+                #f.write("IsNewFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, heapName))
                 #f2.write("IsNewFor, {}, {}\n".format(self.current_class_heap, heapName))
         else:
             f.write("Alloc(\"{}\",\"{}\",\"{}\"). \n".format(node.name, heapName, self.current_meth))
@@ -176,6 +177,7 @@ class AndersenAnalysis(ast.NodeVisitor):
         if_exists(node.returns, self.visit)
         self.current_meth = temp
         for undef in self.current_function_undefined:
+            f.write("OutOfScopeIn(\"{}\",\"{}\").\n".format(undef, heapName))
             f2.write("OutOfScopeIn, {}, {}\n".format(undef, heapName))
         for undef in self.current_function_undefined:
             if undef not in tmp_current_function_defined:
