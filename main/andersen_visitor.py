@@ -17,7 +17,6 @@ f = open('../flix/output', 'w')
 f2 = open('../flix/output.csv', 'w')
 
 treeDumpFile = open('output_tree', 'w')
-f.write("Reachable(\"root\").\n")
 
 
 class AndersenAnalysis(ast.NodeVisitor):
@@ -151,10 +150,10 @@ class AndersenAnalysis(ast.NodeVisitor):
                     if (i != 0):
                         f.write("FormalArg(\"{}\",\"{}\",\"{}\").\n".format(heapName, i - 1, arg.arg))
                         f2.write("FormalArg, {}, {}, {}\n".format(heapName, i - 1, arg.arg))
-            if node.name == "__init__":
+            #if node.name == "__init__":
                 #f.write("IsInitFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, heapName))
                 #f2.write("IsInitFor {}, {}\n".format(self.current_class_heap, heapName))
-            if node.name == "__new__":
+            #if node.name == "__new__":
                 #f.write("IsNewFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, heapName))
                 #f2.write("IsNewFor, {}, {}\n".format(self.current_class_heap, heapName))
         else:

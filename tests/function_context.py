@@ -5,9 +5,7 @@ def foo(x):
     return Null()
 
 def baz(x):
-    def foo():
-        return x
-    return foo()
+    return foo(x)
 
 z = Null()
 y = baz(z)
