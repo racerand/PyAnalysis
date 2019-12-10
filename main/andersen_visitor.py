@@ -150,11 +150,11 @@ class AndersenAnalysis(ast.NodeVisitor):
                     if (i != 0):
                         f.write("FormalArg(\"{}\",\"{}\",\"{}\").\n".format(heapName, i - 1, arg.arg))
                         f2.write("FormalArg, {}, {}, {}\n".format(heapName, i - 1, arg.arg))
-            if node.name == "__init__":
-                f.write("IsInitFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, heapName))
+            #if node.name == "__init__":
+                #f.write("IsInitFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, heapName))
                 #f2.write("IsInitFor {}, {}\n".format(self.current_class_heap, heapName))
-            if node.name == "__new__":
-                f.write("IsNewFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, heapName))
+            #if node.name == "__new__":
+                #f.write("IsNewFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, heapName))
                 #f2.write("IsNewFor, {}, {}\n".format(self.current_class_heap, heapName))
         else:
             f.write("Alloc(\"{}\",\"{}\",\"{}\"). \n".format(node.name, heapName, self.current_meth))
@@ -176,6 +176,7 @@ class AndersenAnalysis(ast.NodeVisitor):
         if_exists(node.returns, self.visit)
         self.current_meth = temp
         for undef in self.current_function_undefined:
+            f.write("OutOfScopeIn(\"{}\",\"{}\").\n".format(undef, heapName))
             f2.write("OutOfScopeIn, {}, {}\n".format(undef, heapName))
         for undef in self.current_function_undefined:
             if undef not in tmp_current_function_defined:

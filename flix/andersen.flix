@@ -47,7 +47,7 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
         VarPointsTo("super", "", "OSuper", "").
 
         // Declare some conStraints.
-        VarPointsTo(var, ctx, object, ctx :-
+        VarPointsTo(var, ctx, object, ctx) :-
             Reachable(meth, ctx), Alloc(var, object, meth).
         VarPointsTo(to, ctx, object, octx) :-
             Move(to, from), VarPointsTo(from, ctx, object, octx).
