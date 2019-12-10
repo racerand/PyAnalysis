@@ -30,11 +30,7 @@ rel AttrPointsTo(baseO: Str, baseOCtx: Str, attr: Str, object: Str, octx: Str)
 rel InterProcAssign(to: Str, toCtx: Str, from: Str, fromCtx: Str)
 rel Reachable(meth: Str, ctx: Str)
 
-def methodMerge(_object: Str, _octx: Str, invo: Str, _ctx: Str) : Str = invo
-def _functionMerge(invo: Str, _ctx: Str) : Str = invo
-def record(_object: Str, ctx: Str) : Str = ctx
-
-def getRules(_merge: (Str, Str, Str, Str) -> Str, _record : (Str, Str) -> Str) : #{Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass,
+def getRules() : #{Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass,
  IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
   ActualReturn, VarPointsTo, CallGraph, AttrPointsTo, InterProcAssign, Reachable, OutOfScopeIn} =  #{
     //Standard relations present in all programs
@@ -174,22 +170,6 @@ def getRules(_merge: (Str, Str, Str, Str) -> Str, _record : (Str, Str) -> Str) :
             ClsVar(cls, object).
 
         // Infer call to __init__ on what is returned from __new__
-        /* TODO: the calleeCtx not being the exact callee context of this call might be bad
-        CallGraph(invo, callerCtx, initMeth, merge(classObject, classOCtx, invo, callerCtx)),
-        VarPointsTo(self, merge(classObject, classOCtx, invo, callerCtx), returnObject, returnOCtx),
-        Reachable(initMeth, merge(classObject, classOCtx, invo, callerCtx)) :-
-            SCall(var,invo,inMeth),
-            Reachable(inMeth, callerCtx),
-            VarPointsTo(var, varCtx, classObject, classOCtx),
-            SelfVar(self, initMeth),
-            AttrPointsTo(classObject, classOCtx, "__init__", initMeth, initMethCtx),
-            AttrPointsTo(classObject, classOCtx, "__init__", newMeth, newMethCtx),
-            ClsVar(cls,newMeth),
-            FormalReturn(newMeth, ret),
-            VarPointsTo(ret, calleeCtx, returnObject, returnOCtx),
-            VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
-            IsClassFor(returnObject, returnOCtx, clsObject, callerCtx).
-        */
         CallGraph(invo, callerCtx, initMeth, invo) :-
             SCall(var,invo,inMeth),
             Reachable(inMeth, callerCtx),
@@ -229,15 +209,6 @@ def getRules(_merge: (Str, Str, Str, Str) -> Str, _record : (Str, Str) -> Str) :
             VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
             IsClassFor(returnObject, returnOCtx, clsObject, callerCtx).
 
-        /* We always make an allocation, as if object.new was called
-        Alloc(storeVar, object, inMeth),
-        IsClassFor(object, callerCtx, classObject, classOCtx) :-
-            Reachable(inMeth, callerCtx),
-            SCall(var, invo, inMeth),
-            VarPointsTo(var, _, classObject, classOCtx),
-            ObjectIsClass(classObject),
-            PotentialAllocationSite(invo, storeVar, object, inMeth).
-        */
         Alloc(storeVar, object, inMeth) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
@@ -252,21 +223,6 @@ def getRules(_merge: (Str, Str, Str, Str) -> Str, _record : (Str, Str) -> Str) :
             ObjectIsClass(classObject),
             PotentialAllocationSite(invo, storeVar, object, inMeth).
 
-        /* And we need to always infer a call to init on this newly allocated object
-            Added a VarPointsTo requirement to get the context of the newly allocated object
-        CallGraph(invo, callerCtx, initMethod, methodMerge(initMethod, initMCtx, invo, callerCtx)),
-        Reachable(initMethod, invo),
-        VarPointsTo(self, methodMerge(initMethod, initMCtx, invo, callerCtx), object, objectCtx):-
-            Reachable(inMeth, callerCtx),
-            SCall(var, invo, inMeth),
-            VarPointsTo(var, varCtx, classObject, classOCtx),
-            ObjectIsClass(classObject),
-            PotentialAllocationSite(invo, storeVar, object, inMeth),
-            VarPointsTo(storeVar, callerCtx, object, objectCtx),
-            AttrPointsTo(classObject, classOCtx, "__init__", initMethod, initMCtx),
-            ObjectIsFunction(initMethod),
-            SelfVar(self, initMethod).
-        */
         CallGraph(invo, callerCtx, initMethod, invo) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
@@ -310,19 +266,6 @@ def getRules(_merge: (Str, Str, Str, Str) -> Str, _record : (Str, Str) -> Str) :
             IsParentTrans(child, parent),
             IsParentTrans(parent, gparent).
 
-        /* We must call all inherited functions.
-        CallGraph(invo, callerCtx, method, invo),
-        Reachable(method, invo),
-        VarPointsTo(self, invo, childObject, childOCtx):-
-            VCall(childVar, attr, invo, inMeth),
-            Reachable(inMeth, callerCtx),
-            VarPointsTo(childVar, callerCtx, childObject, childOCtx),
-            IsClassFor(childObject, childOCtx, classObject, classOCtx),
-            IsParentTrans(classObject, parentObject),
-            AttrPointsTo(parentObject, parentOCtx, attr, method, methodCtx),
-            ObjectIsFunction(method),
-            SelfVar(self, method).
-        */
         CallGraph(invo, callerCtx, method, invo) :-
             VCall(childVar, attr, invo, inMeth),
             Reachable(inMeth, callerCtx),
@@ -370,6 +313,41 @@ def getRules(_merge: (Str, Str, Str, Str) -> Str, _record : (Str, Str) -> Str) :
             IsParentFor(classObject, parentObject),
             AttrPointsTo(classObject, _, attr, inMeth, _).
 
+Alloc("rootNull1","HC12","root").
+ObjectIsClass("HC12").
+IsBaseFor("HC12","object").
+Alloc("rootfoo2","HM14","root").
+FormalArg("HM14","0","rootfoox3").
+ObjectIsFunction("HM14").
+PotentialAllocationSite("stmt15","rootfoonew_var4","H16","HM14").
+ActualReturn("stmt15","rootfoonew_var4").
+SCall("rootNull1","stmt15","HM14").
+FormalReturn("HM14","rootfoonew_var4").
+OutOfScopeIn("rootNull1","HM14").
+Alloc("rootbaz5","HM19","root").
+FormalArg("HM19","0","rootbazx6").
+ObjectIsFunction("HM19").
+Alloc("rootbazfoo7","HM21","HM19").
+ObjectIsFunction("HM21").
+FormalReturn("HM21","rootbazx6").
+OutOfScopeIn("rootbazx6","HM21").
+PotentialAllocationSite("stmt22","rootbaznew_var8","H23","HM19").
+ActualReturn("stmt22","rootbaznew_var8").
+SCall("rootbazfoo7","stmt22","HM19").
+FormalReturn("HM19","rootbaznew_var8").
+OutOfScopeIn("rootbazfoo7","HM19").
+PotentialAllocationSite("stmt25","rootz9","H26","root").
+ActualReturn("stmt25","rootz9").
+SCall("rootNull1","stmt25","root").
+PotentialAllocationSite("stmt28","rooty10","H29","root").
+ActualReturn("stmt28","rooty10").
+SCall("rootbaz5","stmt28","root").
+ActualArg("stmt28","0","rootz9").
+PotentialAllocationSite("stmt31","rooty211","H32","root").
+ActualReturn("stmt31","rooty211").
+SCall("rootbaz5","stmt31","root").
+ActualArg("stmt31","0","rootz9").
+
     }
 
 def getFact(s: Str): #{  Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass,
@@ -408,7 +386,7 @@ def getFacts(l: List[Str]): #{  Move, Alloc, Load, Store, VCall, SCall, ObjectIs
         case x :: xs => getFact(x) <+> getFacts(xs)
     }
 
-def readMoveFacts(path: Path): Result[#{   Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass,
+def _readMoveFacts(path: Path): Result[#{   Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass,
  IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
   ActualReturn, VarPointsTo, CallGraph, AttrPointsTo, InterProcAssign, Reachable,OutOfScopeIn},
                                   Path.IOError] =
@@ -418,11 +396,6 @@ def main(): #{  Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, Potent
  IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
   ActualReturn, VarPointsTo, CallGraph, AttrPointsTo, InterProcAssign, Reachable, OutOfScopeIn} =
 
-    let movePath = Path.new("output.csv");
-    let rules = getRules(methodMerge, record);
-    match readMoveFacts(movePath) with {
-        case Ok(facts) =>
-            let result = solve (facts <+> rules); result /*
-             (project VarPointsTo result) <+> (project Reachable result)*/
-        case Err(_) => ??? // implement proper error handling.
-    }
+    let rules = getRules();
+    let result = solve rules;
+    project VarPointsTo result
