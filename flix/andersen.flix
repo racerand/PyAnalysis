@@ -34,7 +34,7 @@ def methodMerge(_object: Str, _octx: Str, invo: Str, _ctx: Str) : Str = invo
 def _functionMerge(invo: Str, _ctx: Str) : Str = invo
 def record(_object: Str, ctx: Str) : Str = ctx
 
-def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #{Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass,
+def getRules(_merge: (Str, Str, Str, Str) -> Str, _record : (Str, Str) -> Str) : #{Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass,
  IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
   ActualReturn, VarPointsTo, CallGraph, AttrPointsTo, InterProcAssign, Reachable, OutOfScopeIn} =  #{
     //Standard relations present in all programs
