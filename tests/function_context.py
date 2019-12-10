@@ -7,6 +7,6 @@ def foo(x):
 def baz(x):
     return foo(x)
 
-z = Null()
+z = foo(1)
 y = baz(z)
 y2 = baz(z)

@@ -155,7 +155,7 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
             SCall(var, invo, inMeth),
             VarPointsTo(var, callerCtx, classObject, classOCtx),
             ObjectIsClass(classObject),
-            IsParentTrans(classObject, parentObject)
+            IsParentTrans(classObject, parentObject),
             AttrPointsTo(parentObject, callerCtx, "__new__", object, objectCtx),
             ObjectIsFunction(object),
             ClsVar(cls, object).
