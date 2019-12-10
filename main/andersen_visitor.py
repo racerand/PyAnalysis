@@ -4,11 +4,12 @@ import inspect
 import astpretty
 
 import tests.python_features.isinstance_example2
+import tests.constructor_sound_first
 import tests.test_super_3
 from our_ast import RewriteName
 from util import if_exists
 
-ast_node = ast.parse(inspect.getsource(tests.test_super_3))
+ast_node = ast.parse(inspect.getsource(tests.constructor_sound_first))
 
 f = open('../flix/output', 'w')
 f2 = open('../flix/output.csv', 'w')
@@ -130,10 +131,10 @@ class AndersenAnalysis(ast.NodeVisitor):
                         f2.write("FormalArg, {}, {}, {}\n".format(heapName, i - 1, arg.arg))
             if node.name == "__init__":
                 f.write("IsInitFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, heapName))
-                f2.write("IsInitFor {}, {}\n".format(self.current_class_heap, heapName))
+                #f2.write("IsInitFor {}, {}\n".format(self.current_class_heap, heapName))
             if node.name == "__new__":
                 f.write("IsNewFor(\"{}\",\"{}\"). \n".format(self.current_class_heap, heapName))
-                f2.write("IsNewFor, {}, {}\n".format(self.current_class_heap, heapName))
+                #f2.write("IsNewFor, {}, {}\n".format(self.current_class_heap, heapName))
         else:
             f.write("Alloc(\"{}\",\"{}\",\"{}\"). \n".format(node.name, heapName, self.current_meth))
             f2.write("Alloc, {}, {}, {}\n".format(node.name, heapName, self.current_meth))
@@ -163,8 +164,8 @@ class AndersenAnalysis(ast.NodeVisitor):
         self.current_class_heap = heapName
         f.write("Alloc(\"{}\",\"{}\",\"{}\").\n".format(node.name, heapName, self.current_meth))
         f2.write("Alloc, {}, {}, {}\n".format(node.name, heapName, self.current_meth))
-        f.write("ObjectIsClass(\"{}\",\"{}\").\n".format(heapName, self.unique_name("Class")))
-        f2.write("ObjectIsClass, {}, {}\n".format(heapName, self.unique_name("Class")))
+        f.write("ObjectIsClass(\"{}\").\n".format(heapName))
+        f2.write("ObjectIsClass, {}\n".format(heapName))
         f.write("IsBaseFor(\"{}\",\"{}\").\n".format(heapName, node.bases[0].id))
         f2.write("IsBaseFor, {}, {}\n".format(heapName, node.bases[0].id))
         self.generic_visit(node)

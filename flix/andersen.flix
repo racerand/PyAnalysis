@@ -1,17 +1,17 @@
 rel Move(to: Str, from: Str)
-rel Alloc(var: Str, heap: Str, inMeth: Str)
-rel Load(to: Str, base: Str, fld: Str)
-rel Store(base: Str, fld: Str, from: Str)
+rel Alloc(var: Str, object: Str, inMeth: Str)
+rel Load(to: Str, base: Str, attr: Str)
+rel Store(base: Str, attr: Str, from: Str)
 rel VCall(base: Str, var: Str, invo: Str, inMeth: Str)
 rel SCall(var: Str, invo: Str, inMeth: Str)
-rel HeapIsFunction(heap: Str)
-rel PotentialAllocationSite(invo: Str, storeVar: Str, heap: Str, inMeth: Str)
-rel HeapIsClass(heap: Str, class: Str)
+rel ObjectIsFunction(object: Str)
+rel PotentialAllocationSite(invo: Str, storeVar: Str, object: Str, inMeth: Str)
+rel ObjectIsClass(object: Str)
 rel SelfVar(self: Str, method: Str)
 rel ClsVar(cls: Str, method: Str)
-//rel IsInitFor(heap: Str, method:Str)
-rel IsBaseFor(heap: Str, var: Str)
-rel IsNewFor(heap: Str, method: Str)
+//rel IsInitFor(object: Str, method:Str)
+rel IsBaseFor(object: Str, var: Str)
+rel IsNewFor(object: Str, method: Str)
 
 rel FormalArg(meth: Str, n: Str, arg: Str)
 rel ActualArg(invo: Str, n: Str, arg: Str)
@@ -19,104 +19,356 @@ rel FormalReturn(meth: Str, ret: Str)
 rel ActualReturn(invo: Str, var: Str)
 
 // Generated on runtime
-rel IsClassFor(instanceHeap: Str, instanceHCtx: Str, classHeap: Str, classHCtx: Str)
-rel IsParentFor(heap: Str, hctx: Str, parentHeap: Str, parentHCtx: Str)
-rel IsParentTrans(child: Str, hctx: Str, parent: Str, parentHCtx: Str)
+rel IsClassFor(instanceObject: Str, instanceOCtx: Str, classObject: Str, classOCtx: Str)
+rel IsParentFor(object: Str, parentObject: Str)
+rel IsParentTrans(child: Str, parent: Str)
 
-rel VarPointsTo(var: Str, ctx: Str, heap: Str, hctx: Str)
-rel CallGraph(invo: Str, callerCtx: Str, meth: Str, calleCtx: Str)
-rel FldPointsTo(baseH: Str, baseHCtx: Str, fld: Str, heap: Str, hctx: Str)
+rel VarPointsTo(var: Str, ctx: Str, object: Str, octx: Str)
+rel CallGraph(invo: Str, callerCtx: Str, meth: Str, calleeCtx: Str)
+rel AttrPointsTo(baseO: Str, baseOCtx: Str, attr: Str, object: Str, octx: Str)
 rel InterProcAssign(to: Str, toCtx: Str, from: Str, fromCtx: Str)
 rel Reachable(meth: Str, ctx: Str)
 
-def merge(_heap: Str, _hctx: Str, invo: Str, _ctx: Str) : Str = invo
-def record(_heap: Str, ctx: Str) : Str = ctx
+def methodMerge(_object: Str, _octx: Str, invo: Str, _ctx: Str) : Str = invo
+def _functionMerge(invo: Str, _ctx: Str) : Str = invo
+def record(_object: Str, ctx: Str) : Str = ctx
 
-def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #{Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, PotentialAllocationSite, HeapIsClass,
+def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #{Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass,
  IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
-  ActualReturn, VarPointsTo, CallGraph, FldPointsTo, InterProcAssign, Reachable} =  #{
+  ActualReturn, VarPointsTo, CallGraph, AttrPointsTo, InterProcAssign, Reachable} =  #{
     //Standard relations present in all programs
+        // using the empty context as the global starting context (here the empty string)
         Reachable("root", "").
-        HeapIsClass("HObject", "HClass").
-        VarPointsTo("object", "HObject").
-        FldPointsTo("HObject", "__new__", "ObjectNew").
-        HeapIsFunction("HSuper").
-        VarPointsTo("super", "HSuper").
+        ObjectIsClass("OObject").
+        VarPointsTo("object", "", "OObject", "").
+        AttrPointsTo("OObject", "", "__new__", "ObjectNew", "").
+        ObjectIsFunction("OSuper").
+        VarPointsTo("super", "", "OSuper", "").
 
         // Declare some conStraints.
-        VarPointsTo(var, ctx, heap, record(heap, ctx)) :- Reachable(meth, ctx), Alloc(var, heap, meth).
-        VarPointsTo(to, ctx, heap, hctx) :- Move(to, from), VarPointsTo(from, ctx, heap, hctx).
-        FldPointsTo(baseH, baseHCtx, fld, heap, hctx) :- Store(base, fld, from), VarPointsTo(from, ctx, heap, hctx),
-            VarPointsTo(base, ctx, baseH, baseHCtx).
-        VarPointsTo(to, ctx, heap, hctx) :- Load(to, base, fld), VarPointsTo(base, ctx, baseH, baseHCtx),
-            FldPointsTo(baseH, baseHCtx, fld, heap, hctx).
+        VarPointsTo(var, ctx, object, record(object, ctx)) :-
+            Reachable(meth, ctx), Alloc(var, object, meth).
+        VarPointsTo(to, ctx, object, octx) :-
+            Move(to, from), VarPointsTo(from, ctx, object, octx).
+        AttrPointsTo(baseO, baseOCtx, attr, object, octx) :-
+            Store(base, attr, from),
+            VarPointsTo(from, ctx, object, octx),
+            VarPointsTo(base, ctx, baseO, baseOCtx).
+        VarPointsTo(to, ctx, object, octx) :-
+            Load(to, base, attr),
+            VarPointsTo(base, ctx, baseO, baseOCtx),
+            AttrPointsTo(baseO, baseOCtx, attr, object, octx).
 
-        Reachable(fldHeap, merge(baseHeap, baseHCtx, invo, callerCtx)) :- VCall(base, fld, invo, inMeth), Reachable(inMeth, callerCtx), VarPointsTo(base, callerCtx, baseHeap, baseHCtx),
-            FldPointsTo(baseHeap, baseHCtx, fld, fldHeap, hctx), HeapIsFunction(fldHeap).
+        // VCall
+        Reachable(attrObject, merge(baseObject, baseOCtx, invo, callerCtx)) :-
+            VCall(base, attr, invo, inMeth), Reachable(inMeth, callerCtx),
+            VarPointsTo(base, callerCtx, baseObject, baseOCtx),
+            AttrPointsTo(baseObject, baseOCtx, attr, attrObject, octx),
+            ObjectIsFunction(attrObject).
+        CallGraph(invo, callerCtx, attrObject, merge(baseObject, baseOCtx, invo, callerCtx)) :-
+            VCall(base, attr, invo, inMeth),
+            Reachable(inMeth, callerCtx),
+            VarPointsTo(base, baseCtx, baseObject, baseOCtx),
+            AttrPointsTo(baseObject, baseOCtx, attr, attrObject, attrOCtx),
+            ObjectIsFunction(attrObject).
+        VarPointsTo(self, merge(baseObject, baseOCtx, invo, callerCtx), baseObject, baseOCtx):-
+            VCall(base, attr, invo, inMeth),
+            Reachable(inMeth, callerCtx),
+            VarPointsTo(base, callerCtx, baseObject, baseOCtx),
+            AttrPointsTo(baseObject, baseOCtx, attr, attrObject, attrOCtx),
+            ObjectIsFunction(attrObject),
+            SelfVar(self, attrObject).
 
-        CallGraph(invo, fldHeap) :- VCall(base, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(base, baseHeap),
-            FldPointsTo(baseHeap, fld, fldHeap), HeapIsFunction(fldHeap).
-        VarPointsTo(self, baseHeap):- VCall(base, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(base, baseHeap),
-            FldPointsTo(baseHeap, fld, fldHeap), HeapIsFunction(fldHeap), SelfVar(self, fldHeap).
+        // Argument transfer
+        InterProcAssign(to, calleeCtx, from, callerCtx) :-
+            CallGraph(invo, callerCtx, meth, calleeCtx),
+            FormalArg(meth, n, to),
+            ActualArg(invo, n, from).
 
-        InterProcAssign(to,from) :- CallGraph(invo, meth), FormalArg(meth, n, to), ActualArg(invo, n, from).
-        InterProcAssign(to,from) :- CallGraph(invo, meth), FormalReturn(meth, from), ActualReturn(invo, to).
-        VarPointsTo(to, heap) :- InterProcAssign(to, from), VarPointsTo(from, heap).
-        Reachable(heap) :- SCall(var, invo, inMeth), Reachable(inMeth), VarPointsTo(var, heap), HeapIsFunction(heap).
-        CallGraph(invo, heap) :- SCall(var, invo, inMeth), Reachable(inMeth), VarPointsTo(var, heap), HeapIsFunction(heap).
+        // Return value transfer
+        InterProcAssign(to, callerCtx, from, calleeCtx) :-
+            CallGraph(invo, callerCtx, meth, calleeCtx),
+            FormalReturn(meth, from),
+            ActualReturn(invo, to).
+
+        // InterProc to VarPointsTo
+        VarPointsTo(to, toCtx, object, objectCtx) :-
+            InterProcAssign(to, toCtx, from, fromCtx),
+            VarPointsTo(from, fromCtx, object, objectCtx).
+
+        // SCall
+        Reachable(object, merge(object, objectCtx, invo, callerCtx)) :-
+            SCall(var, invo, inMeth),
+            Reachable(inMeth, callerCtx),
+            VarPointsTo(var, varCtx, object, objectCtx),
+            ObjectIsFunction(object).
+        CallGraph(invo, callerCtx, object, objectCtx) :-
+            SCall(var, invo, inMeth),
+            Reachable(inMeth, callerCtx),
+            VarPointsTo(var, varCtx, object, objectCtx),
+            ObjectIsFunction(object).
 
         //Allocate an object with the right class if we encounter a static call to ObjectNew
-        IsClassFor(heap, classHeap) :- SCall(var, invo, inMeth), VarPointsTo(var, "ObjectNew"), PotentialAllocationSite(invo, storeVar, heap, inMeth),
-            ActualArg(invo, "0", clsVar), VarPointsTo(clsVar, classHeap).
-        Alloc(storeVar, heap, inMeth) :- SCall(var, invo, inMeth), VarPointsTo(var, "ObjectNew"), PotentialAllocationSite(invo, storeVar, heap, inMeth).
-        IsClassFor(heap, classHeap) :- VCall(base, fld, invo, inMeth), VarPointsTo(base, baseHeap), FldPointsTo(baseHeap, fld, "ObjectNew"), PotentialAllocationSite(invo, storeVar, heap, inMeth),
-            ActualArg(invo, "0", clsVar), VarPointsTo(clsVar, classHeap).
-        Alloc(storeVar, heap, inMeth) :- VCall(base, fld, invo, inMeth), VarPointsTo(base, baseHeap), FldPointsTo(baseHeap, fld, "ObjectNew"),
-         PotentialAllocationSite(invo, storeVar, heap, inMeth).
+        // First for SCall
+        IsClassFor(object, record(object, methCtx), classObject, classOCtx) :-
+            SCall(var, invo, inMeth),
+            VarPointsTo(var, varCtx, "ObjectNew", objectNewCtx),
+            PotentialAllocationSite(invo, storeVar, object, inMeth),
+            ActualArg(invo, "0", clsVar),
+            VarPointsTo(clsVar, clsVarCtx, classObject, classOCtx),
+            // Use Reachable to get the context in which it is allocated
+            Reachable(inMeth, methCtx).
+        Alloc(storeVar, object, inMeth) :-
+            SCall(var, invo, inMeth),
+            VarPointsTo(var, varCtx, "ObjectNew", objectNewCtx),
+            PotentialAllocationSite(invo, storeVar, object, inMeth).
+        // Then for VCall
+        IsClassFor(object, record(object, methCtx), classObject, classOCtx) :-
+            VCall(base, attr, invo, inMeth),
+            VarPointsTo(base, baseCtx, baseObject, baseOCtx),
+            AttrPointsTo(baseObject, baseOCtx, attr, "ObjectNew", objectNewCtx),
+            PotentialAllocationSite(invo, storeVar, object, inMeth),
+            ActualArg(invo, "0", clsVar),
+            VarPointsTo(clsVar, clsVarCtx, classObject, classOCtx),
+            // Use Reachable to get the context in which it is allocated
+            Reachable(inMeth, methCtx).
+        Alloc(storeVar, object, inMeth) :-
+            VCall(base, attr, invo, inMeth),
+            VarPointsTo(base, baseCtx, baseObject, baseOCtx),
+            AttrPointsTo(baseObject, baseOCtx, attr, "ObjectNew", _),
+            PotentialAllocationSite(invo, storeVar, object, inMeth).
 
-        //Call the __new__ method of a class if there exist a SCall on the class, does the same for all parent definitions of __new__
-        Reachable(toMeth) :- SCall(var, invo, inMeth), Reachable(inMeth), VarPointsTo(var, heap), HeapIsClass(heap, classHeap),
-            IsParentTrans(heap, parentHeap), IsNewFor(parentHeap, toMeth).
-        CallGraph(invo, toMeth) :- SCall(var, invo, inMeth), VarPointsTo(var, classHeap), HeapIsClass(classHeap, class),
-         IsParentTrans(classHeap, parentHeap), IsNewFor(parentHeap, toMeth).
-        VarPointsTo(cls, classHeap) :- SCall(var, invo, inMeth), VarPointsTo(var, classHeap), HeapIsClass(classHeap, class),
-         IsParentTrans(classHeap, parentHeap), IsNewFor(parentHeap, toMeth), ClsVar(cls, toMeth).
+        /* Call the __new__ method of a class if there exist a SCall on the class,
+        the next 3 have the same right side */
+        // TODO: should do the same for all parent definitions of __new__
+        Reachable(object, merge(classObject, classOCtx, invo, callerCtx)) :-
+            Reachable(inMeth, callerCtx),
+            SCall(var, invo, inMeth),
+            VarPointsTo(var, varCtx, classObject, classOCtx),
+            ObjectIsClass(classObject),
+            AttrPointsTo(classObject, classOCtx, "__new__", object, objectCtx),
+            ObjectIsFunction(object),
+            ClsVar(cls, object).
 
-        //Whenever we call on a class, we must call all inherited definitions of __new__, we know that we must always inherit from object.
-        //Therefore we always create an alloc whenever we see a call of class
-        Alloc(storeVar, heap, inMeth) :- SCall(var, invo, inMeth), VarPointsTo(var, classHeap),
-         HeapIsClass(classHeap, class), PotentialAllocationSite(invo, storeVar, heap, inMeth).
-        IsClassFor(heap, classHeap) :- SCall(var, invo, inMeth), VarPointsTo(var, classHeap), PotentialAllocationSite(invo, storeVar, heap, inMeth),
-            HeapIsClass(classHeap, class).
+        CallGraph(invo, callerCtx, object, merge(classObject, classOCtx, invo, callerCtx)) :-
+            Reachable(inMeth, callerCtx),
+            SCall(var, invo, inMeth),
+            VarPointsTo(var, varCtx, classObject, classOCtx),
+            ObjectIsClass(classObject),
+            AttrPointsTo(classObject, classOCtx, "__new__", object, objectCtx),
+            ObjectIsFunction(object),
+            ClsVar(cls, object).
+
+        VarPointsTo(cls, merge(classObject, classOCtx, invo, callerCtx), classObject, classOCtx) :-
+            Reachable(inMeth, callerCtx),
+            SCall(var, invo, inMeth),
+            VarPointsTo(var, varCtx, classObject, classOCtx),
+            ObjectIsClass(classObject),
+            AttrPointsTo(classObject, classOCtx, "__new__", object, objectCtx),
+            ObjectIsFunction(object),
+            ClsVar(cls, object).
+
+        // Infer call to __init__ on what is returned from __new__
+        /* TODO: the calleeCtx not being the exact callee context of this call might be bad
+        CallGraph(invo, callerCtx, initMeth, merge(classObject, classOCtx, invo, callerCtx)),
+        VarPointsTo(self, merge(classObject, classOCtx, invo, callerCtx), returnObject, returnOCtx),
+        Reachable(initMeth, merge(classObject, classOCtx, invo, callerCtx)) :-
+            SCall(var,invo,inMeth),
+            Reachable(inMeth, callerCtx),
+            VarPointsTo(var, varCtx, classObject, classOCtx),
+            SelfVar(self, initMeth),
+            AttrPointsTo(classObject, classOCtx, "__init__", initMeth, initMethCtx),
+            AttrPointsTo(classObject, classOCtx, "__init__", newMeth, newMethCtx),
+            ClsVar(cls,newMeth),
+            FormalReturn(newMeth, ret),
+            VarPointsTo(ret, calleeCtx, returnObject, returnOCtx),
+            VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
+            IsClassFor(returnObject, returnOCtx, clsObject, callerCtx).
+        */
+        CallGraph(invo, callerCtx, initMeth, merge(classObject, classOCtx, invo, callerCtx)) :-
+            SCall(var,invo,inMeth),
+            Reachable(inMeth, callerCtx),
+            VarPointsTo(var, varCtx, classObject, classOCtx),
+            SelfVar(self, initMeth),
+            AttrPointsTo(classObject, classOCtx, "__init__", initMeth, initMethCtx),
+            AttrPointsTo(classObject, classOCtx, "__init__", newMeth, newMethCtx),
+            ClsVar(cls,newMeth),
+            FormalReturn(newMeth, ret),
+            VarPointsTo(ret, calleeCtx, returnObject, returnOCtx),
+            VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
+            IsClassFor(returnObject, returnOCtx, clsObject, callerCtx).
+
+        VarPointsTo(self, merge(classObject, classOCtx, invo, callerCtx), returnObject, returnOCtx) :-
+            SCall(var,invo,inMeth),
+            Reachable(inMeth, callerCtx),
+            VarPointsTo(var, varCtx, classObject, classOCtx),
+            SelfVar(self, initMeth),
+            AttrPointsTo(classObject, classOCtx, "__init__", initMeth, initMethCtx),
+            AttrPointsTo(classObject, classOCtx, "__init__", newMeth, newMethCtx),
+            ClsVar(cls,newMeth),
+            FormalReturn(newMeth, ret),
+            VarPointsTo(ret, calleeCtx, returnObject, returnOCtx),
+            VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
+            IsClassFor(returnObject, returnOCtx, clsObject, callerCtx).
+
+        Reachable(initMeth, merge(classObject, classOCtx, invo, callerCtx)) :-
+            SCall(var,invo,inMeth),
+            Reachable(inMeth, callerCtx),
+            VarPointsTo(var, varCtx, classObject, classOCtx),
+            SelfVar(self, initMeth),
+            AttrPointsTo(classObject, classOCtx, "__init__", initMeth, initMethCtx),
+            AttrPointsTo(classObject, classOCtx, "__init__", newMeth, newMethCtx),
+            ClsVar(cls,newMeth),
+            FormalReturn(newMeth, ret),
+            VarPointsTo(ret, calleeCtx, returnObject, returnOCtx),
+            VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
+            IsClassFor(returnObject, returnOCtx, clsObject, callerCtx).
+
+        /* We always make an allocation, as if object.new was called
+        Alloc(storeVar, object, inMeth),
+        IsClassFor(object, record(object, callerCtx), classObject, classOCtx) :-
+            Reachable(inMeth, callerCtx),
+            SCall(var, invo, inMeth),
+            VarPointsTo(var, _, classObject, classOCtx),
+            ObjectIsClass(classObject),
+            PotentialAllocationSite(invo, storeVar, object, inMeth).
+        */
+        Alloc(storeVar, object, inMeth) :-
+            Reachable(inMeth, callerCtx),
+            SCall(var, invo, inMeth),
+            VarPointsTo(var, _, classObject, classOCtx),
+            ObjectIsClass(classObject),
+            PotentialAllocationSite(invo, storeVar, object, inMeth).
+
+        IsClassFor(object, record(object, callerCtx), classObject, classOCtx) :-
+            Reachable(inMeth, callerCtx),
+            SCall(var, invo, inMeth),
+            VarPointsTo(var, _, classObject, classOCtx),
+            ObjectIsClass(classObject),
+            PotentialAllocationSite(invo, storeVar, object, inMeth).
+
+        /* And we need to always infer a call to init on this newly allocated object
+            Added a VarPointsTo requirement to get the context of the newly allocated object
+        CallGraph(invo, callerCtx, initMethod, methodMerge(initMethod, initMCtx, invo, callerCtx)),
+        Reachable(initMethod, methodMerge(initMethod, initMCtx, invo, callerCtx)),
+        VarPointsTo(self, methodMerge(initMethod, initMCtx, invo, callerCtx), object, objectCtx):-
+            Reachable(inMeth, callerCtx),
+            SCall(var, invo, inMeth),
+            VarPointsTo(var, varCtx, classObject, classOCtx),
+            ObjectIsClass(classObject),
+            PotentialAllocationSite(invo, storeVar, object, inMeth),
+            VarPointsTo(storeVar, callerCtx, object, objectCtx),
+            AttrPointsTo(classObject, classOCtx, "__init__", initMethod, initMCtx),
+            ObjectIsFunction(initMethod),
+            SelfVar(self, initMethod).
+        */
+        CallGraph(invo, callerCtx, initMethod, methodMerge(initMethod, initMCtx, invo, callerCtx)) :-
+            Reachable(inMeth, callerCtx),
+            SCall(var, invo, inMeth),
+            VarPointsTo(var, varCtx, classObject, classOCtx),
+            ObjectIsClass(classObject),
+            PotentialAllocationSite(invo, storeVar, object, inMeth),
+            VarPointsTo(storeVar, callerCtx, object, objectCtx),
+            AttrPointsTo(classObject, classOCtx, "__init__", initMethod, initMCtx),
+            ObjectIsFunction(initMethod),
+            SelfVar(self, initMethod).
+
+        Reachable(initMethod, methodMerge(initMethod, initMCtx, invo, callerCtx)) :-
+            Reachable(inMeth, callerCtx),
+            SCall(var, invo, inMeth),
+            VarPointsTo(var, varCtx, classObject, classOCtx),
+            ObjectIsClass(classObject),
+            PotentialAllocationSite(invo, storeVar, object, inMeth),
+            VarPointsTo(storeVar, callerCtx, object, objectCtx),
+            AttrPointsTo(classObject, classOCtx, "__init__", initMethod, initMCtx),
+            ObjectIsFunction(initMethod),
+            SelfVar(self, initMethod).
+
+        VarPointsTo(self, methodMerge(initMethod, initMCtx, invo, callerCtx), object, objectCtx):-
+            Reachable(inMeth, callerCtx),
+            SCall(var, invo, inMeth),
+            VarPointsTo(var, varCtx, classObject, classOCtx),
+            ObjectIsClass(classObject),
+            PotentialAllocationSite(invo, storeVar, object, inMeth),
+            VarPointsTo(storeVar, callerCtx, object, objectCtx),
+            AttrPointsTo(classObject, classOCtx, "__init__", initMethod, initMCtx),
+            ObjectIsFunction(initMethod),
+            SelfVar(self, initMethod).
+
 
         //Calculate IsParentTrans, which is the transitive and reflective closure of the IsParentFor relation.
-        IsParentTrans(child, parent) :- IsParentFor(child, parent).
-        IsParentTrans(classHeap, classHeap) :- HeapIsClass(classHeap, class).
-        IsParentTrans(child, gparent) :- IsParentTrans(child, parent), IsParentTrans(parent, gparent).
+        IsParentTrans(child, parent) :-
+            IsParentFor(child, parent).
+        IsParentTrans(classObject, classObject) :-
+            ObjectIsClass(classObject).
+        IsParentTrans(child, gparent) :-
+            IsParentTrans(child, parent),
+            IsParentTrans(parent, gparent).
 
-        //We must call all inherited functions.
-        CallGraph(invo, method) :- VCall(childVar, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(childVar, childHeap),
-            IsClassFor(childHeap, classHeap), IsParentTrans(classHeap, parentHeap), FldPointsTo(parentHeap, fld, method),
-            HeapIsFunction(method).
-        Reachable(method) :- VCall(childVar, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(childVar, childHeap),
-            IsClassFor(childHeap, classHeap), IsParentTrans(classHeap, parentHeap), FldPointsTo(parentHeap, fld, method),
-            HeapIsFunction(method).
-        VarPointsTo(self, childHeap):- VCall(childVar, fld, invo, inMeth), Reachable(inMeth), VarPointsTo(childVar, childHeap),
-            IsClassFor(childHeap, classHeap), IsParentTrans(classHeap, parentHeap), FldPointsTo(parentHeap, fld, method),
-            HeapIsFunction(method), SelfVar(self, method).
+        /* We must call all inherited functions.
+        CallGraph(invo, callerCtx, method, merge(childObject, childOCtx, invo, callerCtx)),
+        Reachable(method, merge(childObject, childOCtx, invo, callerCtx)),
+        VarPointsTo(self, merge(childObject, childOCtx, invo, callerCtx), childObject, childOCtx):-
+            VCall(childVar, attr, invo, inMeth),
+            Reachable(inMeth, callerCtx),
+            VarPointsTo(childVar, callerCtx, childObject, childOCtx),
+            IsClassFor(childObject, childOCtx, classObject, classOCtx),
+            IsParentTrans(classObject, parentObject),
+            AttrPointsTo(parentObject, parentOCtx, attr, method, methodCtx),
+            ObjectIsFunction(method),
+            SelfVar(self, method).
+        */
+        CallGraph(invo, callerCtx, method, merge(childObject, childOCtx, invo, callerCtx)) :-
+            VCall(childVar, attr, invo, inMeth),
+            Reachable(inMeth, callerCtx),
+            VarPointsTo(childVar, callerCtx, childObject, childOCtx),
+            IsClassFor(childObject, childOCtx, classObject, classOCtx),
+            IsParentTrans(classObject, parentObject),
+            AttrPointsTo(parentObject, parentOCtx, attr, method, methodCtx),
+            ObjectIsFunction(method),
+            SelfVar(self, method).
+
+        Reachable(method, merge(childObject, childOCtx, invo, callerCtx)) :-
+            VCall(childVar, attr, invo, inMeth),
+            Reachable(inMeth, callerCtx),
+            VarPointsTo(childVar, callerCtx, childObject, childOCtx),
+            IsClassFor(childObject, childOCtx, classObject, classOCtx),
+            IsParentTrans(classObject, parentObject),
+            AttrPointsTo(parentObject, parentOCtx, attr, method, methodCtx),
+            ObjectIsFunction(method),
+            SelfVar(self, method).
+
+        VarPointsTo(self, merge(childObject, childOCtx, invo, callerCtx), childObject, childOCtx):-
+            VCall(childVar, attr, invo, inMeth),
+            Reachable(inMeth, callerCtx),
+            VarPointsTo(childVar, callerCtx, childObject, childOCtx),
+            IsClassFor(childObject, childOCtx, classObject, classOCtx),
+            IsParentTrans(classObject, parentObject),
+            AttrPointsTo(parentObject, parentOCtx, attr, method, methodCtx),
+            ObjectIsFunction(method),
+            SelfVar(self, method).
+
 
         //Derive actual parents from the names given statically in the constructors
-        IsParentFor(heap, parentHeap) :- IsBaseFor(heap,var), VarPointsTo(var, parentHeap), HeapIsClass(parentHeap, class).
+        IsParentFor(object, parentObject) :-
+            IsBaseFor(object , var),
+            VarPointsTo(var, _, parentObject, _),
+            ObjectIsClass(parentObject).
 
-        //Handle super.
-        VarPointsTo(storeVar, parentHeap) :- ActualReturn(invo, storeVar), SCall(var, invo, inMeth), Reachable(inMeth),
-            VarPointsTo(var, "HSuper"), HeapIsClass(classHeap, class), IsParentFor(classHeap, parentHeap),
-            FldPointsTo(classHeap, fld, inMeth).
+        // Handle super.
+        VarPointsTo(storeVar, callerCtx, parentObject, "class") :-
+            ActualReturn(invo, storeVar),
+            SCall(var, invo, inMeth),
+            Reachable(inMeth, callerCtx),
+            VarPointsTo(var, varCtx, "HSuper", superCtx),
+            ObjectIsClass(classObject),
+            IsParentFor(classObject, parentObject),
+            AttrPointsTo(classObject, _, attr, inMeth, _).
     }
 
-def getFact(s: Str): #{  Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, PotentialAllocationSite, HeapIsClass,
+def getFact(s: Str): #{  Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass,
  IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
-  ActualReturn, VarPointsTo, CallGraph, FldPointsTo, InterProcAssign, Reachable} =
+  ActualReturn, VarPointsTo, CallGraph, AttrPointsTo, InterProcAssign, Reachable} =
     let parts = String.split(s, ", ");
      match parts[0] with {
         case "Move" => Move(parts[1], parts[2]).
@@ -125,9 +377,9 @@ def getFact(s: Str): #{  Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction,
         case "Store" => Store(parts[1], parts[2], parts[3]).
         case "VCall" => VCall(parts[1], parts[2], parts[3], parts[4]).
         case "SCall" => SCall(parts[1], parts[2], parts[3]).
-        case "HeapIsFunction" => HeapIsFunction(parts[1]).
+        case "ObjectIsFunction" => ObjectIsFunction(parts[1]).
         case "PotentialAllocationSite" => PotentialAllocationSite(parts[1], parts[2], parts[3], parts[4]).
-        case "HeapIsClass" => HeapIsClass(parts[1], parts[2]).
+        case "ObjectIsClass" => ObjectIsClass(parts[1]).
         case "SelfVar" => SelfVar(parts[1], parts[2]).
         case "ClsVar" => ClsVar(parts[1], parts[2]).
         case "IsBaseFor" => IsBaseFor(parts[1], parts[2]).
@@ -141,29 +393,29 @@ def getFact(s: Str): #{  Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction,
         case _ => ???
      }
 
-def getFacts(l: List[Str]): #{  Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, PotentialAllocationSite, HeapIsClass,
+def getFacts(l: List[Str]): #{  Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass,
  IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
-  ActualReturn, VarPointsTo, CallGraph, FldPointsTo, InterProcAssign, Reachable } =
+  ActualReturn, VarPointsTo, CallGraph, AttrPointsTo, InterProcAssign, Reachable } =
     match l with {
         case Nil => #{ }
         case x :: xs => getFact(x) <+> getFacts(xs)
     }
 
-def readMoveFacts(path: Path): Result[#{   Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, PotentialAllocationSite, HeapIsClass,
+def readMoveFacts(path: Path): Result[#{   Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass,
  IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
-  ActualReturn, VarPointsTo, CallGraph, FldPointsTo, InterProcAssign, Reachable},
+  ActualReturn, VarPointsTo, CallGraph, AttrPointsTo, InterProcAssign, Reachable},
                                   Path.IOError] =
     Result.map(getFacts, Path.readLines(path))
 
-def main(): #{  Move, Alloc, Load, Store, VCall, SCall, HeapIsFunction, PotentialAllocationSite, HeapIsClass,
+def main(): #{  Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass,
  IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
-  ActualReturn, VarPointsTo, CallGraph, FldPointsTo, InterProcAssign, Reachable} =
+  ActualReturn, VarPointsTo, CallGraph, AttrPointsTo, InterProcAssign, Reachable} =
 
     let movePath = Path.new("output.csv");
-    let rules = getRules(merge, record);
+    let rules = getRules(methodMerge, record);
     match readMoveFacts(movePath) with {
         case Ok(facts) =>
-            let result = solve (facts <+> rules);
-             (project VarPointsTo result) <+> (project Reachable result)
+            let result = solve (facts <+> rules); result /*
+             (project VarPointsTo result) <+> (project Reachable result)*/
         case Err(_) => ??? // implement proper error handling.
     }
