@@ -4,9 +4,8 @@ class Pair(object):
         super().__init__()
         self.fst = fst
         self.snd = snd
-
-
-class Tripple(object):
+z = Pair
+class Tripple(z):
     def __init__(self, fst, snd, trd) -> None:
         super().__init__()
         self.fst = fst

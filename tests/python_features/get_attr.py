@@ -7,14 +7,12 @@ with the parameter self, and if we add dataflow, the string of attempted load fl
 invocation sites on load relations.
 """
 class Pair(object):
-    def __init__(self, fst, snd) -> None:
-        super().__init__()
-        self.fst = fst
-        self.snd = snd
-def getattr(self, item):
-    self.__setattr__(item, 3)
-
-Pair.__getattr__ = getattr
-x = Pair(1,2)
-print(x.trd)
-print(x.trd)
+    def __getattr__(self, item):
+        if item == "fst":
+            return 1
+        elif item == "snd":
+            return 2
+x = Pair()
+x.fst = 1
+print(x.fst)
+print(x.snd)

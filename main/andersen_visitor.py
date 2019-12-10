@@ -6,10 +6,11 @@ import astpretty
 import tests.python_features.isinstance_example2
 import tests.constructor_sound_first
 import tests.test_super_3
+import tests.python_features.bases
 from our_ast import RewriteName
 from util import if_exists
 
-ast_node = ast.parse(inspect.getsource(tests.constructor_sound_first))
+ast_node = ast.parse(inspect.getsource(tests.python_features.bases))
 
 f = open('../flix/output', 'w')
 f2 = open('../flix/output.csv', 'w')
@@ -27,6 +28,8 @@ class AndersenAnalysis(ast.NodeVisitor):
         self.current_stmt = ""
         self.current_class = "root"
         self.current_class_heap = ""
+        self.current_function_defined = []
+        self.current_function_undefined = []
 
     def unique_name(self, type):
         return "{}{}".format(type, self.unique_number())
@@ -60,17 +63,25 @@ class AndersenAnalysis(ast.NodeVisitor):
         stmt_name = self.unique_name("stmt")
         self.stmt_map[stmt_name] = node
         self.current_stmt = stmt_name
+        if isinstance(node.targets[0], ast.Name):
+            self.current_function_defined.append(node.targets[0].id)
         if isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Name):
             f.write("Move(\"{}\",\"{}\"). \n".format(node.targets[0].id, node.value.id))
             f2.write("Move, {}, {}\n".format(node.targets[0].id, node.value.id))
+            if node.value.id not in self.current_function_defined:
+                self.current_function_undefined.append(node.value.id)
         if isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Attribute):
             f.write("Load(\"{}\",\"{}\",\"{}\").\n".format(node.targets[0].id, node.value.value.id, node.value.attr))
             f2.write("Load, {}, {}, {}\n".format(node.targets[0].id, node.value.value.id, node.value.attr))
+            if node.value.value.id not in self.current_function_defined:
+                self.current_function_undefined.append(node.value.value.id)
         if isinstance(node.targets[0], ast.Attribute) and isinstance(node.value, ast.Name):
             f.write(
                 "Store(\"{}\",\"{}\",\"{}\").\n".format(node.targets[0].value.id, node.targets[0].attr, node.value.id))
             f2.write(
                 "Store, {}, {}, {}\n".format(node.targets[0].value.id, node.targets[0].attr, node.value.id))
+            if node.value.id not in self.current_function_defined:
+                self.current_function_undefined.append(node.value.id)
         if isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Call):
             f.write("PotentialAllocationSite(\"{}\",\"{}\",\"{}\",\"{}\").\n".format(
                 self.current_stmt, node.targets[0].id, self.unique_name("H"), self.current_meth
@@ -95,12 +106,18 @@ class AndersenAnalysis(ast.NodeVisitor):
             f2.write(
                 "VCall, {}, {}, {}, {}\n".format(node.func.value.id, node.func.attr, self.current_stmt,
                                                                self.current_meth))
+            if node.func.value.id not in self.current_function_defined:
+                self.current_function_undefined.append(node.func.value.id)
         if isinstance(node.func, ast.Name):
             f.write("SCall(\"{}\",\"{}\",\"{}\").\n".format(node.func.id, self.current_stmt, self.current_meth))
             f2.write("SCall, {}, {}, {}\n".format(node.func.id, self.current_stmt, self.current_meth))
+            if node.func.id not in self.current_function_defined:
+                self.current_function_undefined.append(node.func.id)
         for i, arg in enumerate(node.args):
             f.write("ActualArg(\"{}\",\"{}\",\"{}\").\n".format(self.current_stmt, i, arg.id))
             f2.write("ActualArg, {}, {}, {}\n".format(self.current_stmt, i, arg.id))
+            if arg.id not in self.current_function_defined:
+                self.current_function_undefined.append(arg.id)
         self.generic_visit(node)
 
     def visit_list(self, nodes):
@@ -108,6 +125,10 @@ class AndersenAnalysis(ast.NodeVisitor):
             self.visit(node)
 
     def visit_FunctionDef(self, node):
+        tmp_current_function_defined = self.current_function_defined
+        tmp_current_function_undefined = self.current_function_undefined
+        self.current_function_defined = ["super"]
+        self.current_function_undefined = []
         stmt_name = self.unique_name("stmt")
         self.stmt_map[stmt_name] = node
         self.current_stmt = stmt_name
@@ -142,6 +163,9 @@ class AndersenAnalysis(ast.NodeVisitor):
                 for i, arg in enumerate(node.args.args):
                     f.write("FormalArg(\"{}\",\"{}\",\"{}\").\n".format(heapName, i, arg.arg))
                     f2.write("FormalArg, {}, {}, {}\n".format(heapName, i, arg.arg))
+        if node.args:
+            for arg in node.args.args:
+                self.current_function_defined.append(arg.arg)
         f.write("ObjectIsFunction(\"{}\").\n".format(heapName))
         f2.write("ObjectIsFunction, {}\n".format(heapName))
         temp = self.current_meth
@@ -151,8 +175,18 @@ class AndersenAnalysis(ast.NodeVisitor):
         if_exists(node.body, self.visit_list)
         if_exists(node.returns, self.visit)
         self.current_meth = temp
+        for undef in self.current_function_undefined:
+            print("OutOfScopeIn, {}, {}\n".format(undef, heapName))
+            f2.write("OutOfScopeIn, {}, {}\n".format(undef, heapName))
+        for undef in self.current_function_undefined:
+            if undef not in tmp_current_function_defined:
+                tmp_current_function_undefined.append(undef)
+        self.current_function_undefined = tmp_current_function_undefined
+        self.current_function_defined = tmp_current_function_defined
 
     def visit_Return(self, node):
+        if node.value.id not in self.current_function_defined:
+            self.current_function_undefined.append(node.value.id)
         f.write("FormalReturn(\"{}\",\"{}\").\n".format(self.current_meth, node.value.id))
         f2.write("FormalReturn, {}, {}\n".format(self.current_meth, node.value.id))
 
