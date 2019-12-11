@@ -374,40 +374,6 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
             ObjectIsClass(classObject),
             IsParentFor(classObject, parentObject),
             AttrPointsTo(classObject, _, attr, inMeth, _).
-            Alloc("rootNull1","HC12","root").
-ObjectIsClass("HC12").
-IsBaseFor("HC12","object").
-Alloc("rootfoo2","HM14","root").
-FormalArg("HM14","0","rootfoox3").
-ObjectIsFunction("HM14").
-PotentialAllocationSite("stmt15","rootfoonew_var4","H16","HM14").
-ActualReturn("stmt15","rootfoonew_var4").
-SCall("rootNull1","stmt15","HM14").
-FormalReturn("HM14","rootfoonew_var4").
-OutOfScopeIn("rootNull1","HM14").
-Alloc("rootbaz5","HM19","root").
-FormalArg("HM19","0","rootbazx6").
-ObjectIsFunction("HM19").
-Alloc("rootbazfoo7","HM21","HM19").
-ObjectIsFunction("HM21").
-FormalReturn("HM21","rootbazx6").
-OutOfScopeIn("rootbazx6","HM21").
-PotentialAllocationSite("stmt22","rootbaznew_var8","H23","HM19").
-ActualReturn("stmt22","rootbaznew_var8").
-SCall("rootbazfoo7","stmt22","HM19").
-FormalReturn("HM19","rootbaznew_var8").
-OutOfScopeIn("rootbazfoo7","HM19").
-PotentialAllocationSite("stmt25","rootz9","H26","root").
-ActualReturn("stmt25","rootz9").
-SCall("rootNull1","stmt25","root").
-PotentialAllocationSite("stmt28","rooty10","H29","root").
-ActualReturn("stmt28","rooty10").
-SCall("rootbaz5","stmt28","root").
-ActualArg("stmt28","0","rootz9").
-PotentialAllocationSite("stmt31","rooty211","H32","root").
-ActualReturn("stmt31","rooty211").
-SCall("rootbaz5","stmt31","root").
-ActualArg("stmt31","0","rootz9").
 
 
     }
@@ -457,6 +423,11 @@ def readMoveFacts(path: Path): Result[#{   Move, Alloc, Load, Store, VCall, SCal
 def main(): #{  Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass,
  IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
   ActualReturn, VarPointsTo, CallGraph, AttrPointsTo, InterProcAssign, Reachable, OutOfScopeIn} =
+    let movePath = Path.new("output.csv");
     let rules = getRules(methodMerge, record);
-    let result = solve rules;
-    project VarPointsTo result
+    match readMoveFacts(movePath) with {
+        case Ok(facts) =>
+            let result = solve (facts <+> rules); result /*;
+            (project VarPointsTo result)*/
+        case Err(_) => ??? // implement proper error handling.
+    }
