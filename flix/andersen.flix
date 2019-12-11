@@ -122,7 +122,7 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
             VarPointsTo(var, methCtx, "ObjectNew", _),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
-            VarPointsTo(clsVar, clsVarCtx, classObject, classOCtx),
+            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
         Alloc(storeVar, object, inMeth) :-
@@ -137,7 +137,7 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
             AttrPointsTo(baseObject, baseOCtx, attr, "ObjectNew", objectNewCtx),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
-            VarPointsTo(clsVar, clsVarCtx, classObject, classOCtx),
+            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
         Alloc(storeVar, object, inMeth) :-
