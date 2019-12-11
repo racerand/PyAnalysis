@@ -43,6 +43,13 @@ class RewriteName(ast.NodeTransformer):
         self.unique += 1
         return self.unique
 
+    def visit_Module(self, node):
+        for child in node.body:
+            if isinstance(child, ast.ClassDef) or isinstance(child, ast.FunctionDef):
+                new_name = self.unique_scoped_name(child.name)
+                self.namespace_map["root"][child.name] = new_name
+        return self.generic_visit(node)
+
     def visit_Assign(self, node):
         new_nodes = self.generic_stmt_visit(node)
         last_node = None
@@ -240,7 +247,10 @@ class RewriteName(ast.NodeTransformer):
     ## Stmt
 
     def visit_FunctionDef(self, node):
-        if self.current_scope_is_class:
+        current_scope = self.namespace_list[-1]
+        if current_scope == "root":
+            unique_func_name = self.namespace_map[current_scope][node.name]
+        elif self.current_scope_is_class:
             unique_func_name = node.name
         else:
             unique_func_name = self.unique_scoped_name(node.name)
@@ -278,7 +288,11 @@ class RewriteName(ast.NodeTransformer):
         self.visit_FunctionDef(node)
 
     def visit_ClassDef(self, node):
-        unique_class_name = self.unique_scoped_name(node.name)
+        current_scope = self.namespace_list[-1]
+        if current_scope == "root":
+            unique_class_name = self.namespace_map[current_scope][node.name]
+        else:
+            unique_class_name = self.unique_scoped_name(node.name)
         self.namespace_map[self.namespace_list[-1]][node.name] = unique_class_name
         self.namespace_list.append(node.name)
         self.namespace_map[node.name] = {}
