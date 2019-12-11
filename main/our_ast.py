@@ -5,6 +5,7 @@ from graphviz import Source
 
 import tests.constructor_sound_first
 import tests.testScopedNames
+import tests.root_function_with_same_name
 from lib.fuzzingbook.ControlFlow import gen_cfg, to_graph
 
 
@@ -15,6 +16,18 @@ def fib(n, ):
     return l
 
 
+class GlobalNamesFinder(ast.NodeVisitor):
+    def __init__(self):
+        super().__init__()
+        self.global_names = []
+
+    def visit_FunctionDef(self, node):
+        self.global_names.append(node.name)
+
+    def visit_ClassDef(self, node):
+        self.global_names.append(node.name)
+
+
 class RewriteName(ast.NodeTransformer):
     def __init__(self) -> None:
         super().__init__()
@@ -23,6 +36,7 @@ class RewriteName(ast.NodeTransformer):
         self.namespace_list = ["root"]
         self.namespace_map = {"root": {}}
         self.current_scope_is_class = False
+
 
     def unique_scoped_name(self, name):
         new_name = self.scoped_name(name)
@@ -44,11 +58,13 @@ class RewriteName(ast.NodeTransformer):
         return self.unique
 
     def visit_Module(self, node):
-        for child in node.body:
-            if isinstance(child, ast.ClassDef) or isinstance(child, ast.FunctionDef):
-                new_name = self.unique_scoped_name(child.name)
-                self.namespace_map["root"][child.name] = new_name
+        global_names_finder = GlobalNamesFinder()
+        global_names_finder.visit(node)
+        global_names = global_names_finder.global_names
+        root_function_map = self.gen_unique_name_map(global_names)
+        self.namespace_map["root"] = root_function_map
         return self.generic_visit(node)
+
 
     def visit_Assign(self, node):
         new_nodes = self.generic_stmt_visit(node)
@@ -396,19 +412,25 @@ class RewriteName(ast.NodeTransformer):
         new_store = ast.copy_location(ast.Name(new_name, ast.Store), location_name)
         return new_store, new_load
 
+    def gen_unique_name_map(self, global_names):
+        return_map = {}
+        for name in global_names:
+            return_map[name] = self.unique_scoped_name(name)
+        return return_map
+
 
 def is_constant_value(node):
     return isinstance(node, ast.Name) or isinstance(node, ast.Num) or isinstance(node, ast.Str) \
            or isinstance(node, ast.Bytes) or isinstance(node, ast.NameConstant) or isinstance(node, ast.Constant)
 
 if __name__ == '__main__':
-    ast_node = ast.parse(inspect.getsource(tests.testScopedNames))
+    ast_node = ast.parse(inspect.getsource(tests.root_function_with_same_name))
 
     rn = RewriteName()
     ast_node = rn.visit(ast_node)
-
-    graph = to_graph(gen_cfg("", ast_node=ast_node))
+    print(1)
+    # graph = to_graph(gen_cfg("", ast_node=ast_node))
 
     # to_graph does not like Try and error names
 
-    Source(graph).save()
+    # Source(graph).save()
