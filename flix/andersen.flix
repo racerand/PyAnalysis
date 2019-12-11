@@ -427,7 +427,7 @@ def main(): #{  Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, Potent
     let rules = getRules(methodMerge, record);
     match readMoveFacts(movePath) with {
         case Ok(facts) =>
-            let result = solve (facts <+> rules); result /*;
-            (project VarPointsTo result)*/
+            let result = solve (facts <+> rules);
+            result
         case Err(_) => ??? // implement proper error handling.
     }
