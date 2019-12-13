@@ -133,7 +133,7 @@ class AndersenAnalysis(ast.NodeVisitor):
         stmt_name = self.unique_name("stmt")
         self.stmt_map[stmt_name] = node
         self.current_stmt = stmt_name
-        heapName = self.unique_name("HM")
+        heapName = self.unique_name("HM{}".format(node.name))
         if self.current_class != "root":
             tmpName = self.unique_name("name")
             f.write("Alloc(\"{}\",\"{}\",\"{}\"). \n".format(tmpName, heapName, self.current_meth))
@@ -194,7 +194,7 @@ class AndersenAnalysis(ast.NodeVisitor):
     def visit_ClassDef(self, node):
         tmp = self.current_class
         self.current_class = node.name
-        heapName = self.unique_name("HC")
+        heapName = self.unique_name("HC{}".format(node.name))
         tmpHeap = self.current_class_heap
         self.current_class_heap = heapName
         f.write("Alloc(\"{}\",\"{}\",\"{}\").\n".format(node.name, heapName, self.current_meth))

@@ -84,6 +84,8 @@ class ChessBoard(AbstractBoard):
         self.board[0][5] = WhiteChessBishop()
         self.board[0][6] = WhiteChessKnight()
         self.board[0][7] = WhiteChessRook()
+        testPiece = BlackChessRook()
+        testPiece2 = BlackChessRook()
         for column in range(8):
             self.board[1][column] = BlackChessPawn()
             self.board[6][column] = WhiteChessPawn()
