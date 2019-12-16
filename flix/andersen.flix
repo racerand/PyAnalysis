@@ -60,6 +60,8 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
             VarPointsTo(base, ctx, baseO, baseOCtx),
             AttrPointsTo(baseO, baseOCtx, attr, object, octx).
 
+
+
         // VCall
         Reachable(attrObject, merge(baseObject, baseOCtx, invo, callerCtx)) :-
             VCall(base, attr, invo, inMeth), Reachable(inMeth, callerCtx),
@@ -288,7 +290,7 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
         IsClassFor(object, record(object, methCtx), classObject, classOCtx) :-
             VCall(base, attr, invo, inMeth),
             VarPointsTo(base, methCtx, baseObject, baseOCtx),
-            AttrPointsTo(baseObject, baseOCtx, attr, "ObjectNew", objectNewCtx),
+            AttrPointsTo(baseObject, baseOCtx, attr, "ObjectNew", _),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
             VarPointsTo(clsVar, methCtx, classObject, classOCtx),
@@ -297,7 +299,7 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
         Alloc(storeVar, object, inMeth) :-
             VCall(base, attr, invo, inMeth),
             VarPointsTo(base, methCtx, baseObject, baseOCtx),
-            AttrPointsTo(baseObject, baseOCtx, attr, "ObjectNew", objectNewCtx),
+            AttrPointsTo(baseObject, baseOCtx, attr, "ObjectNew", _),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
             VarPointsTo(clsVar, methCtx, classObject, classOCtx),
@@ -690,13 +692,14 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
 
         /* Handle super. We do not care about in which context it happens, since if super is bound
             to another variable the call will not work as usual */
-        VarPointsTo(storeVar, callerCtx, parentObject, "class") :-
+        VarPointsTo(storeVar, callerCtx, parentObject, parentOCtx) :-
             ActualReturn(invo, storeVar),
             SCall(var, invo, inMeth),
             Reachable(inMeth, callerCtx),
             VarPointsTo(var, _, "OSuper", superCtx),
             ObjectIsClass(classObject),
             IsParentFor(classObject, parentObject),
+            VarPointsTo(_,_,parentObject,parentOCtx),
             AttrPointsTo(classObject, _, attr, inMeth, _).
 
 
@@ -752,6 +755,6 @@ def main(): #{  Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, Potent
     match readMoveFacts(movePath) with {
         case Ok(facts) =>
             let result = solve (facts <+> rules);
-            (project InterProcAssign result) <+> (project OutOfScopeIn result) <+> (project CallGraph result) <+> (project Alloc result) <+>(project VarPointsTo result) <+> (project Reachable result)
+            result
         case Err(_) => ??? // implement proper error handling.
     }

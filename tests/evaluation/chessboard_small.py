@@ -1,6 +1,6 @@
 class Piece(object):
     def __new__(cls, str):
-        super().__new__(cls)
+        return super().__new__(cls)
 
     __slots__ = ()
 
