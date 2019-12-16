@@ -30,22 +30,22 @@ rel AttrPointsTo(baseO: Str, baseOCtx: Str, attr: Str, object: Str, octx: Str)
 rel InterProcAssign(to: Str, toCtx: Str, from: Str, fromCtx: Str)
 rel Reachable(meth: Str, ctx: Str)
 
-def methodMerge(_object: Str, _octx: Str, invo: Str, _ctx: Str) : Str = invo
+def strMerge(_object: Str, _octx: Str, invo: Str, _ctx: Str) : Str = invo
 def _functionMerge(invo: Str, _ctx: Str) : Str = invo
-def record(_object: Str, ctx: Str) : Str = ctx
+def strRecord(_object: Str, ctx: Str) : Str = ctx
 
-def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #{Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass,
+def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, empty_ctx : ctx) : #{Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass,
  IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
   ActualReturn, VarPointsTo, CallGraph, AttrPointsTo, InterProcAssign, Reachable, OutOfScopeIn} =  #{
     //Standard relations present in all programs
         // using the empty context as the global starting context (here the empty string)
-        Reachable("root", "").
+        Reachable("root", empty_ctx).
         ObjectIsClass("OObject").
-        VarPointsTo("object", "", "OObject", "").
-        AttrPointsTo("OObject", "", "__new__", "ObjectNew", "").
+        VarPointsTo("object", empty_ctx, "OObject", record("OObject", empty_ctx)).
+        AttrPointsTo("OObject", record("OObject", empty_ctx), "__new__", "ObjectNew", record("ObjectNew", empty_ctx)).
         ObjectIsFunction("OSuper").
-        VarPointsTo("super", "", "OSuper", "").
-        VarPointsTo("str", "", "String", "").
+        VarPointsTo("super", empty_ctx, "OSuper", record("OSuper", empty_ctx)).
+        VarPointsTo("str", empty_ctx, "String", record("String", empty_ctx)).
         ObjectIsClass("String").
         IsParentFor("String", "OObject").
 
@@ -670,9 +670,9 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
 
         /* And we need to always infer a call to init on this newly allocated object
             Added a VarPointsTo requirement to get the context of the newly allocated object
-        CallGraph(invo, callerCtx, initMethod, methodMerge(initMethod, initMCtx, invo, callerCtx)),
-        Reachable(initMethod, methodMerge(initMethod, initMCtx, invo, callerCtx)),
-        VarPointsTo(self, methodMerge(initMethod, initMCtx, invo, callerCtx), object, objectCtx):-
+        CallGraph(invo, callerCtx, initMethod, merge(initMethod, initMCtx, invo, callerCtx)),
+        Reachable(initMethod, merge(initMethod, initMCtx, invo, callerCtx)),
+        VarPointsTo(self, merge(initMethod, initMCtx, invo, callerCtx), object, objectCtx):-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
             VarPointsTo(var, callerCtx, classObject, classOCtx),
@@ -684,7 +684,7 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
             ObjectIsFunction(initMethod),
             SelfVar(self, initMethod).
         */
-        CallGraph(invo, callerCtx, initMethod, methodMerge(initMethod, initMCtx, invo, callerCtx)) :-
+        CallGraph(invo, callerCtx, initMethod, merge(initMethod, initMCtx, invo, callerCtx)) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
             VarPointsTo(var, callerCtx, classObject, classOCtx),
@@ -696,7 +696,7 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
             ObjectIsFunction(initMethod),
             SelfVar(self, initMethod).
 
-        Reachable(initMethod, methodMerge(initMethod, initMCtx, invo, callerCtx)) :-
+        Reachable(initMethod, merge(initMethod, initMCtx, invo, callerCtx)) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
             VarPointsTo(var, callerCtx, classObject, classOCtx),
@@ -708,7 +708,7 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
             ObjectIsFunction(initMethod),
             SelfVar(self, initMethod).
 
-        VarPointsTo(self, methodMerge(initMethod, initMCtx, invo, callerCtx), object, objectCtx):-
+        VarPointsTo(self, merge(initMethod, initMCtx, invo, callerCtx), object, objectCtx):-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
             VarPointsTo(var, callerCtx, classObject, classOCtx),
@@ -723,9 +723,9 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
         /* And we need to always infer a call to init on this newly allocated object
             Added a VarPointsTo requirement to get the context of the newly allocated object
             For when var points to something out of scope
-        CallGraph(invo, callerCtx, initMethod, methodMerge(initMethod, initMCtx, invo, callerCtx)),
-        Reachable(initMethod, methodMerge(initMethod, initMCtx, invo, callerCtx)),
-        VarPointsTo(self, methodMerge(initMethod, initMCtx, invo, callerCtx), object, objectCtx):-
+        CallGraph(invo, callerCtx, initMethod, merge(initMethod, initMCtx, invo, callerCtx)),
+        Reachable(initMethod, merge(initMethod, initMCtx, invo, callerCtx)),
+        VarPointsTo(self, merge(initMethod, initMCtx, invo, callerCtx), object, objectCtx):-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
             VarPointsTo(var, _, classObject, classOCtx),
@@ -738,7 +738,7 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
             ObjectIsFunction(initMethod),
             SelfVar(self, initMethod).
         */
-        CallGraph(invo, callerCtx, initMethod, methodMerge(initMethod, initMCtx, invo, callerCtx)) :-
+        CallGraph(invo, callerCtx, initMethod, merge(initMethod, initMCtx, invo, callerCtx)) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
             VarPointsTo(var, _, classObject, classOCtx),
@@ -751,7 +751,7 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
             ObjectIsFunction(initMethod),
             SelfVar(self, initMethod).
 
-        Reachable(initMethod, methodMerge(initMethod, initMCtx, invo, callerCtx)) :-
+        Reachable(initMethod, merge(initMethod, initMCtx, invo, callerCtx)) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
             VarPointsTo(var, _, classObject, classOCtx),
@@ -764,7 +764,7 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
             ObjectIsFunction(initMethod),
             SelfVar(self, initMethod).
 
-        VarPointsTo(self, methodMerge(initMethod, initMCtx, invo, callerCtx), object, objectCtx):-
+        VarPointsTo(self, merge(initMethod, initMCtx, invo, callerCtx), object, objectCtx):-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
             VarPointsTo(var, _, classObject, classOCtx),
@@ -855,7 +855,7 @@ def main(): #{  Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, Potent
  IsClassFor, SelfVar, ClsVar, IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
   ActualReturn, VarPointsTo, CallGraph, AttrPointsTo, InterProcAssign, Reachable, OutOfScopeIn} =
     let movePath = Path.new("output.csv");
-    let rules = getRules(methodMerge, record);
+    let rules = getRules(strMerge, strRecord, "");
     match readMoveFacts(movePath) with {
         case Ok(facts) =>
             let result = solve (facts <+> rules);
