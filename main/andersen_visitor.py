@@ -7,12 +7,13 @@ import tests.python_features.isinstance_example2
 import tests.constructor_sound_first
 import tests.test_super_3
 import tests.evaluation.chessboard
+import tests.evaluation.chessboard_small
 import tests.function_context
 import tests.python_features.bases
 from our_ast import RewriteName
 from util import if_exists
 
-ast_node = ast.parse(inspect.getsource(tests.evaluation.chessboard))
+ast_node = ast.parse(inspect.getsource(tests.evaluation.chessboard_small))
 
 f = open('../flix/output', 'w')
 f2 = open('../flix/output.csv', 'w')

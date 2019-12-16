@@ -693,7 +693,7 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
             ActualReturn(invo, storeVar),
             SCall(var, invo, inMeth),
             Reachable(inMeth, callerCtx),
-            VarPointsTo(var, callerCtx, "HSuper", superCtx),
+            VarPointsTo(var, callerCtx, "OSuper", superCtx),
             ObjectIsClass(classObject),
             IsParentFor(classObject, parentObject),
             AttrPointsTo(classObject, _, attr, inMeth, _).
@@ -703,7 +703,7 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
             ActualReturn(invo, storeVar),
             SCall(var, invo, inMeth),
             Reachable(inMeth, callerCtx),
-            VarPointsTo(var, _, "HSuper", superCtx),
+            VarPointsTo(var, _, "OSuper", superCtx),
             OutOfScopeIn(var, inMeth),
             ObjectIsClass(classObject),
             IsParentFor(classObject, parentObject),
