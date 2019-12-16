@@ -688,23 +688,13 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
             VarPointsTo(var, _, parentObject, _),
             ObjectIsClass(parentObject).
 
-        // Handle super.
-        VarPointsTo(storeVar, callerCtx, parentObject, "class") :-
-            ActualReturn(invo, storeVar),
-            SCall(var, invo, inMeth),
-            Reachable(inMeth, callerCtx),
-            VarPointsTo(var, callerCtx, "OSuper", superCtx),
-            ObjectIsClass(classObject),
-            IsParentFor(classObject, parentObject),
-            AttrPointsTo(classObject, _, attr, inMeth, _).
-
-        // Handle super for when var is defined out of scope
+        /* Handle super. We do not care about in which context it happens, since if super is bound
+            to another variable the call will not work as usual */
         VarPointsTo(storeVar, callerCtx, parentObject, "class") :-
             ActualReturn(invo, storeVar),
             SCall(var, invo, inMeth),
             Reachable(inMeth, callerCtx),
             VarPointsTo(var, _, "OSuper", superCtx),
-            OutOfScopeIn(var, inMeth),
             ObjectIsClass(classObject),
             IsParentFor(classObject, parentObject),
             AttrPointsTo(classObject, _, attr, inMeth, _).
