@@ -45,6 +45,9 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
         AttrPointsTo("OObject", "", "__new__", "ObjectNew", "").
         ObjectIsFunction("OSuper").
         VarPointsTo("super", "", "OSuper", "").
+        VarPointsTo("str", "", "String", "").
+        ObjectIsClass("String").
+        IsParentFor("String", "OObject").
 
         // Declare some conStraints.
         VarPointsTo(var, ctx, object, record(object, ctx)) :-
@@ -305,6 +308,55 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
             VarPointsTo(clsVar, methCtx, classObject, classOCtx),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
+        // Then for VCall when the call is on a class and we need to look up the transitive and reflective closure
+        // of inheritance.
+        IsClassFor(object, record(object, methCtx), classObject, classOCtx) :-
+            VCall(base, attr, invo, inMeth),
+            VarPointsTo(base, methCtx, baseObject, _),
+            ObjectIsClass(baseObject),
+            IsParentTrans(baseObject, parentObject),
+            AttrPointsTo(parentObject, _, attr, "ObjectNew", _),
+            PotentialAllocationSite(invo, storeVar, object, inMeth),
+            ActualArg(invo, "0", clsVar),
+            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            // Use Reachable to get the context in which it is allocated
+            Reachable(inMeth, methCtx).
+        Alloc(storeVar, object, inMeth) :-
+            VCall(base, attr, invo, inMeth),
+            VarPointsTo(base, methCtx, baseObject, _),
+            ObjectIsClass(baseObject),
+            IsParentTrans(baseObject, parentObject),
+            AttrPointsTo(parentObject, _, attr, "ObjectNew", _),
+            PotentialAllocationSite(invo, storeVar, object, inMeth),
+            ActualArg(invo, "0", clsVar),
+            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            // Use Reachable to get the context in which it is allocated
+            Reachable(inMeth, methCtx).
+
+        // Then for VCall when we look up the transitive and reflective closure of inheritance when the base object is
+        //an instance
+        IsClassFor(object, record(object, methCtx), classObject, classOCtx) :-
+            VCall(base, attr, invo, inMeth),
+            VarPointsTo(base, methCtx, baseObject, baseOCtx),
+            IsClassFor(baseObject, basOCtx, classForObject, classOCtx),
+            IsParentTrans(classForObject, parentObject),
+            AttrPointsTo(parentObject, _, attr, "ObjectNew", _),
+            PotentialAllocationSite(invo, storeVar, object, inMeth),
+            ActualArg(invo, "0", clsVar),
+            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            // Use Reachable to get the context in which it is allocated
+            Reachable(inMeth, methCtx).
+        Alloc(storeVar, object, inMeth) :-
+            VCall(base, attr, invo, inMeth),
+            VarPointsTo(base, methCtx, baseObject, baseOCtx),
+            IsClassFor(baseObject, basOCtx, classForObject, classOCtx),
+            IsParentTrans(classForObject, parentObject),
+            AttrPointsTo(parentObject, _, attr, "ObjectNew", _),
+            PotentialAllocationSite(invo, storeVar, object, inMeth),
+            ActualArg(invo, "0", clsVar),
+            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            // Use Reachable to get the context in which it is allocated
+            Reachable(inMeth, methCtx).
 
         // Then for VCall. When base does not point to anything in the current context
         IsClassFor(object, record(object, methCtx), classObject, classOCtx) :-
@@ -322,6 +374,58 @@ def getRules(merge: (Str, Str, Str, Str) -> Str, record : (Str, Str) -> Str) : #
             VarPointsTo(base, _, baseObject, baseOCtx),
             OutOfScopeIn(base, inMeth),
             AttrPointsTo(baseObject, baseOCtx, attr, "ObjectNew", objectNewCtx),
+            PotentialAllocationSite(invo, storeVar, object, inMeth),
+            ActualArg(invo, "0", clsVar),
+            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            // Use Reachable to get the context in which it is allocated
+            Reachable(inMeth, methCtx).
+
+    // Then for VCall. When base does not point to anything in the current context, and it refers to a class
+        IsClassFor(object, record(object, methCtx), classObject, classOCtx) :-
+            VCall(base, attr, invo, inMeth),
+            VarPointsTo(base, _, baseObject, baseOCtx),
+            OutOfScopeIn(base, inMeth),
+            ObjectIsClass(baseObject),
+            IsParentTrans(baseObject, parentObject),
+            AttrPointsTo(parentObject, _, attr, "ObjectNew", _),
+            PotentialAllocationSite(invo, storeVar, object, inMeth),
+            ActualArg(invo, "0", clsVar),
+            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            // Use Reachable to get the context in which it is allocated
+            Reachable(inMeth, methCtx).
+        Alloc(storeVar, object, inMeth) :-
+            VCall(base, attr, invo, inMeth),
+            VarPointsTo(base, _, baseObject, baseOCtx),
+            OutOfScopeIn(base, inMeth),
+            ObjectIsClass(baseObject),
+            IsParentTrans(baseObject, parentObject),
+            AttrPointsTo(parentObject, _, attr, "ObjectNew", _),
+            PotentialAllocationSite(invo, storeVar, object, inMeth),
+            ActualArg(invo, "0", clsVar),
+            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            // Use Reachable to get the context in which it is allocated
+            Reachable(inMeth, methCtx).
+        // Then for VCall. When base does not point to anything in the current context, and we look at the inherited
+        // functions
+        IsClassFor(object, record(object, methCtx), classObject, classOCtx) :-
+            VCall(base, attr, invo, inMeth),
+            VarPointsTo(base, _, baseObject, baseOCtx),
+            OutOfScopeIn(base, inMeth),
+            IsClassFor(baseObject, _, classForObject, classOCtx),
+            IsParentTrans(classForObject, parentObject),
+            AttrPointsTo(parentObject, _, attr, "ObjectNew", objectNewCtx),
+            PotentialAllocationSite(invo, storeVar, object, inMeth),
+            ActualArg(invo, "0", clsVar),
+            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            // Use Reachable to get the context in which it is allocated
+            Reachable(inMeth, methCtx).
+        Alloc(storeVar, object, inMeth) :-
+            VCall(base, attr, invo, inMeth),
+            VarPointsTo(base, _, baseObject, baseOCtx),
+            OutOfScopeIn(base, inMeth),
+            IsClassFor(baseObject, _, classForObject, classOCtx),
+            IsParentTrans(classForObject, parentObject),
+            AttrPointsTo(parentObject, _, attr, "ObjectNew", objectNewCtx),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
             VarPointsTo(clsVar, methCtx, classObject, classOCtx),
@@ -755,6 +859,6 @@ def main(): #{  Move, Alloc, Load, Store, VCall, SCall, ObjectIsFunction, Potent
     match readMoveFacts(movePath) with {
         case Ok(facts) =>
             let result = solve (facts <+> rules);
-            result
+            project VarPointsTo result
         case Err(_) => ??? // implement proper error handling.
     }

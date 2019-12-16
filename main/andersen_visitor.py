@@ -13,7 +13,7 @@ import tests.python_features.bases
 from our_ast import RewriteName
 from util import if_exists
 
-ast_node = ast.parse(inspect.getsource(tests.evaluation.chessboard_small))
+ast_node = ast.parse(inspect.getsource(tests.evaluation.chessboard))
 
 f = open('../flix/output', 'w')
 f2 = open('../flix/output.csv', 'w')
