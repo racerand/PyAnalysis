@@ -20,7 +20,7 @@ rel FormalReturn(meth: Str, ret: Str)
 rel ActualReturn(invo: Str, var: Str)
 
 // Generated on runtime
-rel IsClassFor[octx](instanceObject: Str, instanceOCtx: octx, classObject: Str, classOCtx: octx)
+rel IsClassFor[octx](instanceObject: Str, instanceOCtx: octx, classObject: Str)
 rel IsParentFor(object: Str, parentObject: Str)
 rel IsParentTrans(child: Str, parent: Str)
 
@@ -30,17 +30,17 @@ rel AttrPointsTo[octx](baseO: Str, baseOCtx: octx, attr: Str, object: Str, octx:
 rel InterProcAssign[ctx](to: Str, toCtx: ctx, from: Str, fromCtx: ctx)
 rel Reachable[ctx](meth: Str, ctx: ctx)
 
-def _strMerge(_object: Str, _octx: Str, invo: Str, _ctx: Str) : Str = invo
+def strMerge(_object: Str, _octx: Str, invo: Str, _ctx: Str) : Str = invo
 def _functionMerge(invo: Str, _ctx: Str) : Str = invo
-def _strRecord(_object: Str, ctx: Str) : Str = ctx
-def listMerge(_object: Str, _octx: List[Str], invo: Str, _ctx: List[Str]) : List[Str] = invo::Nil
-def listRecord(_object: Str, ctx: List[Str]) : List[Str] = ctx
+def strRecord(_object: Str, ctx: Str) : Str = ctx
+def _listMerge(_object: Str, _octx: List[Str], invo: Str, _ctx: List[Str]) : List[Str] = invo::Nil
+def _listRecord(_object: Str, ctx: List[Str]) : List[Str] = ctx
 
 def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, empty_ctx : ctx) : #{Move, Alloc, Load,
-  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[List[Str]], SelfVar, ClsVar,
+  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[Str], SelfVar, ClsVar,
   IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
-  ActualReturn, VarPointsTo[List[Str], List[Str]], CallGraph[List[Str]], AttrPointsTo[List[Str]],
-   InterProcAssign[List[Str]], Reachable[List[Str]], OutOfScopeIn} =  #{
+  ActualReturn, VarPointsTo[Str, Str], CallGraph[Str], AttrPointsTo[Str],
+   InterProcAssign[Str], Reachable[Str], OutOfScopeIn} =  #{
     //Standard relations present in all programs
         // using the empty context as the global starting context (here the empty string)
         Reachable("root", empty_ctx).
@@ -119,7 +119,7 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
             VCall(childVar, attr, invo, inMeth),
             Reachable(inMeth, callerCtx),
             VarPointsTo(childVar, callerCtx, childObject, childOCtx),
-            IsClassFor(childObject, childOCtx, classObject, classOCtx),
+            IsClassFor(childObject, childOCtx, classObject),
             IsParentTrans(classObject, parentObject),
             AttrPointsTo(parentObject, parentOCtx, attr, method, methodCtx),
             ObjectIsFunction(method),
@@ -129,7 +129,7 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
             VCall(childVar, attr, invo, inMeth),
             Reachable(inMeth, callerCtx),
             VarPointsTo(childVar, callerCtx, childObject, childOCtx),
-            IsClassFor(childObject, childOCtx, classObject, classOCtx),
+            IsClassFor(childObject, childOCtx, classObject),
             IsParentTrans(classObject, parentObject),
             AttrPointsTo(parentObject, parentOCtx, attr, method, methodCtx),
             ObjectIsFunction(method),
@@ -139,7 +139,7 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
             VCall(childVar, attr, invo, inMeth),
             Reachable(inMeth, callerCtx),
             VarPointsTo(childVar, callerCtx, childObject, childOCtx),
-            IsClassFor(childObject, childOCtx, classObject, classOCtx),
+            IsClassFor(childObject, childOCtx, classObject),
             IsParentTrans(classObject, parentObject),
             AttrPointsTo(parentObject, parentOCtx, attr, method, methodCtx),
             ObjectIsFunction(method),
@@ -149,7 +149,7 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
             VCall(childVar, attr, invo, inMeth),
             Reachable(inMeth, callerCtx),
             VarPointsTo(childVar, callerCtx, childObject, childOCtx),
-            IsClassFor(childObject, childOCtx, classObject, classOCtx),
+            IsClassFor(childObject, childOCtx, classObject),
             IsParentTrans(classObject, parentObject),
             AttrPointsTo(parentObject, parentOCtx, attr, method, methodCtx),
             ObjectIsFunction(method),
@@ -163,7 +163,7 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
             Reachable(inMeth, callerCtx),
             VarPointsTo(childVar, _, childObject, childOCtx),
             OutOfScopeIn(childVar, inMeth),
-            IsClassFor(childObject, childOCtx, classObject, classOCtx),
+            IsClassFor(childObject, childOCtx, classObject),
             IsParentTrans(classObject, parentObject),
             AttrPointsTo(parentObject, parentOCtx, attr, method, methodCtx),
             ObjectIsFunction(method),
@@ -174,7 +174,7 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
             Reachable(inMeth, callerCtx),
             VarPointsTo(childVar, _, childObject, childOCtx),
             OutOfScopeIn(childVar, inMeth),
-            IsClassFor(childObject, childOCtx, classObject, classOCtx),
+            IsClassFor(childObject, childOCtx, classObject),
             IsParentTrans(classObject, parentObject),
             AttrPointsTo(parentObject, parentOCtx, attr, method, methodCtx),
             ObjectIsFunction(method),
@@ -185,7 +185,7 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
             Reachable(inMeth, callerCtx),
             VarPointsTo(childVar, _, childObject, childOCtx),
             OutOfScopeIn(childVar, inMeth),
-            IsClassFor(childObject, childOCtx, classObject, classOCtx),
+            IsClassFor(childObject, childOCtx, classObject),
             IsParentTrans(classObject, parentObject),
             AttrPointsTo(parentObject, parentOCtx, attr, method, methodCtx),
             ObjectIsFunction(method),
@@ -196,7 +196,7 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
             Reachable(inMeth, callerCtx),
             VarPointsTo(childVar, _, childObject, childOCtx),
             OutOfScopeIn(childVar, inMeth),
-            IsClassFor(childObject, childOCtx, classObject, classOCtx),
+            IsClassFor(childObject, childOCtx, classObject),
             IsParentTrans(classObject, parentObject),
             AttrPointsTo(parentObject, parentOCtx, attr, method, methodCtx),
             ObjectIsFunction(method),
@@ -253,12 +253,12 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
 
         //Allocate an object with the right class if we encounter a static call to ObjectNew
         // First for SCall
-        IsClassFor(object, record(object, methCtx), classObject, classOCtx) :-
+        IsClassFor(object, record(object, methCtx), classObject) :-
             SCall(var, invo, inMeth),
             VarPointsTo(var, methCtx, "ObjectNew", _),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
-            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            VarPointsTo(clsVar, methCtx, classObject, _),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
         Alloc(storeVar, object, inMeth) :-
@@ -266,18 +266,18 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
             VarPointsTo(var, methCtx, "ObjectNew", _),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
-            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            VarPointsTo(clsVar, methCtx, classObject, _),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
 
         // First for SCall where var is not in the local scope
-        IsClassFor(object, record(object, methCtx), classObject, classOCtx) :-
+        IsClassFor(object, record(object, methCtx), classObject) :-
             SCall(var, invo, inMeth),
             VarPointsTo(var, _, "ObjectNew", _),
             OutOfScopeIn(var, inMeth),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
-            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            VarPointsTo(clsVar, methCtx, classObject, _),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
         Alloc(storeVar, object, inMeth) :-
@@ -286,19 +286,19 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
             OutOfScopeIn(var, inMeth),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
-            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            VarPointsTo(clsVar, methCtx, classObject, _),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
 
 
         // Then for VCall
-        IsClassFor(object, record(object, methCtx), classObject, classOCtx) :-
+        IsClassFor(object, record(object, methCtx), classObject) :-
             VCall(base, attr, invo, inMeth),
             VarPointsTo(base, methCtx, baseObject, baseOCtx),
             AttrPointsTo(baseObject, baseOCtx, attr, "ObjectNew", _),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
-            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            VarPointsTo(clsVar, methCtx, classObject, _),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
         Alloc(storeVar, object, inMeth) :-
@@ -307,12 +307,12 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
             AttrPointsTo(baseObject, baseOCtx, attr, "ObjectNew", _),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
-            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            VarPointsTo(clsVar, methCtx, classObject, _),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
         // Then for VCall when the call is on a class and we need to look up the transitive and reflective closure
         // of inheritance.
-        IsClassFor(object, record(object, methCtx), classObject, classOCtx) :-
+        IsClassFor(object, record(object, methCtx), classObject) :-
             VCall(base, attr, invo, inMeth),
             VarPointsTo(base, methCtx, baseObject, _),
             ObjectIsClass(baseObject),
@@ -320,7 +320,7 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
             AttrPointsTo(parentObject, _, attr, "ObjectNew", _),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
-            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            VarPointsTo(clsVar, methCtx, classObject, _),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
         Alloc(storeVar, object, inMeth) :-
@@ -331,44 +331,44 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
             AttrPointsTo(parentObject, _, attr, "ObjectNew", _),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
-            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            VarPointsTo(clsVar, methCtx, classObject, _),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
 
         // Then for VCall when we look up the transitive and reflective closure of inheritance when the base object is
         //an instance
-        IsClassFor(object, record(object, methCtx), classObject, classOCtx) :-
+        IsClassFor(object, record(object, methCtx), classObject) :-
             VCall(base, attr, invo, inMeth),
             VarPointsTo(base, methCtx, baseObject, baseOCtx),
-            IsClassFor(baseObject, basOCtx, classForObject, classOCtx),
+            IsClassFor(baseObject, basOCtx, classForObject),
             IsParentTrans(classForObject, parentObject),
             AttrPointsTo(parentObject, _, attr, "ObjectNew", _),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
-            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            VarPointsTo(clsVar, methCtx, classObject, _),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
         Alloc(storeVar, object, inMeth) :-
             VCall(base, attr, invo, inMeth),
             VarPointsTo(base, methCtx, baseObject, baseOCtx),
-            IsClassFor(baseObject, basOCtx, classForObject, classOCtx),
+            IsClassFor(baseObject, basOCtx, classForObject),
             IsParentTrans(classForObject, parentObject),
             AttrPointsTo(parentObject, _, attr, "ObjectNew", _),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
-            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            VarPointsTo(clsVar, methCtx, classObject, _),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
 
         // Then for VCall. When base does not point to anything in the current context
-        IsClassFor(object, record(object, methCtx), classObject, classOCtx) :-
+        IsClassFor(object, record(object, methCtx), classObject) :-
             VCall(base, attr, invo, inMeth),
             VarPointsTo(base, _, baseObject, baseOCtx),
             OutOfScopeIn(base, inMeth),
             AttrPointsTo(baseObject, baseOCtx, attr, "ObjectNew", objectNewCtx),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
-            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            VarPointsTo(clsVar, methCtx, classObject, _),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
         Alloc(storeVar, object, inMeth) :-
@@ -378,12 +378,12 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
             AttrPointsTo(baseObject, baseOCtx, attr, "ObjectNew", objectNewCtx),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
-            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            VarPointsTo(clsVar, methCtx, classObject, _),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
 
     // Then for VCall. When base does not point to anything in the current context, and it refers to a class
-        IsClassFor(object, record(object, methCtx), classObject, classOCtx) :-
+        IsClassFor(object, record(object, methCtx), classObject) :-
             VCall(base, attr, invo, inMeth),
             VarPointsTo(base, _, baseObject, baseOCtx),
             OutOfScopeIn(base, inMeth),
@@ -392,7 +392,7 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
             AttrPointsTo(parentObject, _, attr, "ObjectNew", _),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
-            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            VarPointsTo(clsVar, methCtx, classObject, _),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
         Alloc(storeVar, object, inMeth) :-
@@ -404,63 +404,63 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
             AttrPointsTo(parentObject, _, attr, "ObjectNew", _),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
-            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            VarPointsTo(clsVar, methCtx, classObject, _),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
         // Then for VCall. When base does not point to anything in the current context, and we look at the inherited
         // functions
-        IsClassFor(object, record(object, methCtx), classObject, classOCtx) :-
+        IsClassFor(object, record(object, methCtx), classObject) :-
             VCall(base, attr, invo, inMeth),
             VarPointsTo(base, _, baseObject, baseOCtx),
             OutOfScopeIn(base, inMeth),
-            IsClassFor(baseObject, _, classForObject, classOCtx),
+            IsClassFor(baseObject, _, classForObject),
             IsParentTrans(classForObject, parentObject),
             AttrPointsTo(parentObject, _, attr, "ObjectNew", objectNewCtx),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
-            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            VarPointsTo(clsVar, methCtx, classObject, _),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
         Alloc(storeVar, object, inMeth) :-
             VCall(base, attr, invo, inMeth),
             VarPointsTo(base, _, baseObject, baseOCtx),
             OutOfScopeIn(base, inMeth),
-            IsClassFor(baseObject, _, classForObject, classOCtx),
+            IsClassFor(baseObject, _, classForObject),
             IsParentTrans(classForObject, parentObject),
             AttrPointsTo(parentObject, _, attr, "ObjectNew", objectNewCtx),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
             ActualArg(invo, "0", clsVar),
-            VarPointsTo(clsVar, methCtx, classObject, classOCtx),
+            VarPointsTo(clsVar, methCtx, classObject, _),
             // Use Reachable to get the context in which it is allocated
             Reachable(inMeth, methCtx).
 
         /* Call the __new__ method of a class if there exist a SCall on the class,
         the next 3 have the same right side */
         // TODO: should do the same for all parent definitions of __new__
-        Reachable(object, merge(classObject, classOCtx, invo, callerCtx)) :-
+        Reachable(object, merge(classObject, empty_ctx, invo, callerCtx)) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, callerCtx, classObject, classOCtx),
+            VarPointsTo(var, callerCtx, classObject, _),
             ObjectIsClass(classObject),
             IsParentTrans(classObject, parentObject),
             AttrPointsTo(parentObject, _, "__new__", object, objectCtx),
             ObjectIsFunction(object),
             ClsVar(cls, object).
 
-        CallGraph(invo, callerCtx, object, merge(classObject, classOCtx, invo, callerCtx)) :-
+        CallGraph(invo, callerCtx, object, merge(classObject, empty_ctx, invo, callerCtx)) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, callerCtx, classObject, classOCtx),
+            VarPointsTo(var, callerCtx, classObject, _),
             ObjectIsClass(classObject),
             IsParentTrans(classObject, parentObject),
             AttrPointsTo(parentObject, _, "__new__", object, objectCtx),
             ObjectIsFunction(object),
             ClsVar(cls, object).
 
-        VarPointsTo(cls, merge(classObject, classOCtx, invo, callerCtx), classObject, classOCtx) :-
+        VarPointsTo(cls, merge(classObject, empty_ctx, invo, callerCtx), classObject, empty_ctx) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, callerCtx, classObject, classOCtx),
+            VarPointsTo(var, callerCtx, classObject, _),
             ObjectIsClass(classObject),
             IsParentTrans(classObject, parentObject),
             AttrPointsTo(parentObject, _, "__new__", object, objectCtx),
@@ -470,10 +470,10 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
         /* Call the __new__ method of a class if there exist a SCall on the class,
         the next 3 have the same right side */
         // This time for when var in out of scope in the caller context
-        Reachable(object, merge(classObject, classOCtx, invo, callerCtx)) :-
+        Reachable(object, merge(classObject, empty_ctx, invo, callerCtx)) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, _, classObject, classOCtx),
+            VarPointsTo(var, _, classObject, _),
             OutOfScopeIn(var, inMeth),
             ObjectIsClass(classObject),
             IsParentTrans(classObject, parentObject),
@@ -481,10 +481,10 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
             ObjectIsFunction(object),
             ClsVar(cls, object).
 
-        CallGraph(invo, callerCtx, object, merge(classObject, classOCtx, invo, callerCtx)) :-
+        CallGraph(invo, callerCtx, object, merge(classObject, empty_ctx, invo, callerCtx)) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, _, classObject, classOCtx),
+            VarPointsTo(var, _, classObject, _),
             OutOfScopeIn(var, inMeth),
             ObjectIsClass(classObject),
             IsParentTrans(classObject, parentObject),
@@ -492,10 +492,10 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
             ObjectIsFunction(object),
             ClsVar(cls, object).
 
-        VarPointsTo(cls, merge(classObject, classOCtx, invo, callerCtx), classObject, classOCtx) :-
+        VarPointsTo(cls, merge(classObject, empty_ctx, invo, callerCtx), classObject, empty_ctx) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, _, classObject, classOCtx),
+            VarPointsTo(var, _, classObject, _),
             OutOfScopeIn(var, inMeth),
             ObjectIsClass(classObject),
             IsParentTrans(classObject, parentObject),
@@ -505,151 +505,151 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
 
         // Infer call to __init__ on what is returned from __new__
         /* TODO: the calleeCtx not being the exact callee context of this call might be bad
-        CallGraph(invo, callerCtx, initMeth, merge(classObject, classOCtx, invo, callerCtx)),
-        VarPointsTo(self, merge(classObject, classOCtx, invo, callerCtx), returnObject, returnOCtx),
-        Reachable(initMeth, merge(classObject, classOCtx, invo, callerCtx)) :-
+        CallGraph(invo, callerCtx, initMeth, merge(classObject, empty_ctx, invo, callerCtx)),
+        VarPointsTo(self, merge(classObject, empty_ctx, invo, callerCtx), returnObject, returnOCtx),
+        Reachable(initMeth, merge(classObject, empty_ctx, invo, callerCtx)) :-
             SCall(var,invo,inMeth),
             Reachable(inMeth, callerCtx),
-            VarPointsTo(var, callerCtx, classObject, classOCtx),
+            VarPointsTo(var, callerCtx, classObject, _),
             SelfVar(self, initMeth),
-            AttrPointsTo(classObject, classOCtx, "__init__", initMeth, initMethCtx),
-            AttrPointsTo(classObject, classOCtx, "__init__", newMeth, newMethCtx),
+            AttrPointsTo(classObject, _, "__init__", initMeth, initMethCtx),
+            AttrPointsTo(classObject, _, "__init__", newMeth, newMethCtx),
             ClsVar(cls,newMeth),
             FormalReturn(newMeth, ret),
             VarPointsTo(ret, calleeCtx, returnObject, returnOCtx),
             VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
             IsClassFor(returnObject, returnOCtx, clsObject, callerCtx).
         */
-        CallGraph(invo, callerCtx, initMeth, merge(classObject, classOCtx, invo, callerCtx)) :-
+        CallGraph(invo, callerCtx, initMeth, merge(classObject, empty_ctx, invo, callerCtx)) :-
             SCall(var,invo,inMeth),
             Reachable(inMeth, callerCtx),
-            VarPointsTo(var, callerCtx, classObject, classOCtx),
+            VarPointsTo(var, callerCtx, classObject, _),
             SelfVar(self, initMeth),
-            AttrPointsTo(classObject, classOCtx, "__init__", initMeth, initMethCtx),
-            AttrPointsTo(classObject, classOCtx, "__new__", newMeth, newMethCtx),
+            AttrPointsTo(classObject, _, "__init__", initMeth, initMethCtx),
+            AttrPointsTo(classObject, _, "__init__", newMeth, newMethCtx),
             ClsVar(cls,newMeth),
             FormalReturn(newMeth, ret),
             VarPointsTo(ret, calleeCtx, returnObject, returnOCtx),
             VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
-            IsClassFor(returnObject, returnOCtx, clsObject, callerCtx).
+            IsClassFor(returnObject, returnOCtx, clsObject).
 
-        VarPointsTo(self, merge(classObject, classOCtx, invo, callerCtx), returnObject, returnOCtx) :-
+        VarPointsTo(self, merge(classObject, empty_ctx, invo, callerCtx), returnObject, returnOCtx) :-
             SCall(var,invo,inMeth),
             Reachable(inMeth, callerCtx),
-            VarPointsTo(var, callerCtx, classObject, classOCtx),
+            VarPointsTo(var, callerCtx, classObject, _),
             SelfVar(self, initMeth),
-            AttrPointsTo(classObject, classOCtx, "__init__", initMeth, initMethCtx),
-            AttrPointsTo(classObject, classOCtx, "__init__", newMeth, newMethCtx),
+            AttrPointsTo(classObject, _, "__init__", initMeth, initMethCtx),
+            AttrPointsTo(classObject, _, "__init__", newMeth, newMethCtx),
             ClsVar(cls,newMeth),
             FormalReturn(newMeth, ret),
             VarPointsTo(ret, calleeCtx, returnObject, returnOCtx),
             VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
-            IsClassFor(returnObject, returnOCtx, clsObject, callerCtx).
+            IsClassFor(returnObject, returnOCtx, clsObject).
 
-        Reachable(initMeth, merge(classObject, classOCtx, invo, callerCtx)) :-
+        Reachable(initMeth, merge(classObject, empty_ctx, invo, callerCtx)) :-
             SCall(var,invo,inMeth),
             Reachable(inMeth, callerCtx),
-            VarPointsTo(var, callerCtx, classObject, classOCtx),
+            VarPointsTo(var, callerCtx, classObject, _),
             SelfVar(self, initMeth),
-            AttrPointsTo(classObject, classOCtx, "__init__", initMeth, initMethCtx),
-            AttrPointsTo(classObject, classOCtx, "__init__", newMeth, newMethCtx),
+            AttrPointsTo(classObject, _, "__init__", initMeth, initMethCtx),
+            AttrPointsTo(classObject, _, "__init__", newMeth, newMethCtx),
             ClsVar(cls,newMeth),
             FormalReturn(newMeth, ret),
             VarPointsTo(ret, calleeCtx, returnObject, returnOCtx),
             VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
-            IsClassFor(returnObject, returnOCtx, clsObject, callerCtx).
+            IsClassFor(returnObject, returnOCtx, clsObject).
 
         // Infer call to __init__ on what is returned from __new__
         /* TODO: the calleeCtx not being the exact callee context of this call might be bad
         This one for when var is defined out of scope
-        CallGraph(invo, callerCtx, initMeth, merge(classObject, classOCtx, invo, callerCtx)),
-        VarPointsTo(self, merge(classObject, classOCtx, invo, callerCtx), returnObject, returnOCtx),
-        Reachable(initMeth, merge(classObject, classOCtx, invo, callerCtx)) :-
+        CallGraph(invo, callerCtx, initMeth, merge(classObject, empty_ctx, invo, callerCtx)),
+        VarPointsTo(self, merge(classObject, empty_ctx, invo, callerCtx), returnObject, returnOCtx),
+        Reachable(initMeth, merge(classObject, empty_ctx, invo, callerCtx)) :-
             SCall(var,invo,inMeth),
             Reachable(inMeth, callerCtx),
-            VarPointsTo(var, _, classObject, classOCtx),
+            VarPointsTo(var, _, classObject, _),
             OutOfScopeIn(var, inMeth),
             SelfVar(self, initMeth),
-            AttrPointsTo(classObject, classOCtx, "__init__", initMeth, initMethCtx),
-            AttrPointsTo(classObject, classOCtx, "__init__", newMeth, newMethCtx),
+            AttrPointsTo(classObject, _, "__init__", initMeth, initMethCtx),
+            AttrPointsTo(classObject, _, "__init__", newMeth, newMethCtx),
             ClsVar(cls,newMeth),
             FormalReturn(newMeth, ret),
             VarPointsTo(ret, calleeCtx, returnObject, returnOCtx),
             VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
-            IsClassFor(returnObject, returnOCtx, clsObject, callerCtx).
+            IsClassFor(returnObject, returnOCtx, clsObject).
         */
-        CallGraph(invo, callerCtx, initMeth, merge(classObject, classOCtx, invo, callerCtx)) :-
+        CallGraph(invo, callerCtx, initMeth, merge(classObject, empty_ctx, invo, callerCtx)) :-
             SCall(var,invo,inMeth),
             Reachable(inMeth, callerCtx),
-            VarPointsTo(var, _, classObject, classOCtx),
+            VarPointsTo(var, _, classObject, _),
             OutOfScopeIn(var, inMeth),
             SelfVar(self, initMeth),
-            AttrPointsTo(classObject, classOCtx, "__init__", initMeth, initMethCtx),
-            AttrPointsTo(classObject, classOCtx, "__init__", newMeth, newMethCtx),
+            AttrPointsTo(classObject, _, "__init__", initMeth, initMethCtx),
+            AttrPointsTo(classObject, _, "__init__", newMeth, newMethCtx),
             ClsVar(cls,newMeth),
             FormalReturn(newMeth, ret),
             VarPointsTo(ret, calleeCtx, returnObject, returnOCtx),
             VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
-            IsClassFor(returnObject, returnOCtx, clsObject, callerCtx).
+            IsClassFor(returnObject, returnOCtx, clsObject).
 
-        VarPointsTo(self, merge(classObject, classOCtx, invo, callerCtx), returnObject, returnOCtx) :-
+        VarPointsTo(self, merge(classObject, empty_ctx, invo, callerCtx), returnObject, returnOCtx) :-
             SCall(var,invo,inMeth),
             Reachable(inMeth, callerCtx),
-            VarPointsTo(var, _, classObject, classOCtx),
+            VarPointsTo(var, _, classObject, _),
             OutOfScopeIn(var, inMeth),
             SelfVar(self, initMeth),
-            AttrPointsTo(classObject, classOCtx, "__init__", initMeth, initMethCtx),
-            AttrPointsTo(classObject, classOCtx, "__init__", newMeth, newMethCtx),
+            AttrPointsTo(classObject, _, "__init__", initMeth, initMethCtx),
+            AttrPointsTo(classObject, _, "__init__", newMeth, newMethCtx),
             ClsVar(cls,newMeth),
             FormalReturn(newMeth, ret),
             VarPointsTo(ret, calleeCtx, returnObject, returnOCtx),
             VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
-            IsClassFor(returnObject, returnOCtx, clsObject, callerCtx).
+            IsClassFor(returnObject, returnOCtx, clsObject).
 
-        Reachable(initMeth, merge(classObject, classOCtx, invo, callerCtx)) :-
+        Reachable(initMeth, merge(classObject, empty_ctx, invo, callerCtx)) :-
             SCall(var,invo,inMeth),
             Reachable(inMeth, callerCtx),
-            VarPointsTo(var, _, classObject, classOCtx),
+            VarPointsTo(var, _, classObject, _),
             OutOfScopeIn(var, inMeth),
             SelfVar(self, initMeth),
-            AttrPointsTo(classObject, classOCtx, "__init__", initMeth, initMethCtx),
-            AttrPointsTo(classObject, classOCtx, "__init__", newMeth, newMethCtx),
+            AttrPointsTo(classObject, _, "__init__", initMeth, initMethCtx),
+            AttrPointsTo(classObject, _, "__init__", newMeth, newMethCtx),
             ClsVar(cls,newMeth),
             FormalReturn(newMeth, ret),
             VarPointsTo(ret, calleeCtx, returnObject, returnOCtx),
             VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
-            IsClassFor(returnObject, returnOCtx, clsObject, callerCtx).
+            IsClassFor(returnObject, returnOCtx, clsObject).
 
         /* We always make an allocation, as if object.new was called
         Alloc(storeVar, object, inMeth),
-        IsClassFor(object, record(object, callerCtx), classObject, classOCtx) :-
+        IsClassFor(object, record(object, callerCtx), classObject) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, callerCtx, classObject, classOCtx),
+            VarPointsTo(var, callerCtx, classObject, _),
             ObjectIsClass(classObject),
             PotentialAllocationSite(invo, storeVar, object, inMeth).
         */
         Alloc(storeVar, object, inMeth) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, callerCtx, classObject, classOCtx),
+            VarPointsTo(var, callerCtx, classObject, _),
             ObjectIsClass(classObject),
             PotentialAllocationSite(invo, storeVar, object, inMeth).
 
-        IsClassFor(object, record(object, callerCtx), classObject, classOCtx) :-
+        IsClassFor(object, record(object, callerCtx), classObject) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, callerCtx, classObject, classOCtx),
+            VarPointsTo(var, callerCtx, classObject, _),
             ObjectIsClass(classObject),
             PotentialAllocationSite(invo, storeVar, object, inMeth).
 
         /* We always make an allocation, as if object.new was called
             This one for when var only points to something out of scope
         Alloc(storeVar, object, inMeth),
-        IsClassFor(object, record(object, callerCtx), classObject, classOCtx) :-
+        IsClassFor(object, record(object, callerCtx), classObject) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, _, classObject, classOCtx),
+            VarPointsTo(var, _, classObject, _),
             OutOfScopeIn(var, inMeth),
             ObjectIsClass(classObject),
             PotentialAllocationSite(invo, storeVar, object, inMeth).
@@ -657,15 +657,15 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
         Alloc(storeVar, object, inMeth) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, _, classObject, classOCtx),
+            VarPointsTo(var, _, classObject, _),
             OutOfScopeIn(var, inMeth),
             ObjectIsClass(classObject),
             PotentialAllocationSite(invo, storeVar, object, inMeth).
 
-        IsClassFor(object, record(object, callerCtx), classObject, classOCtx) :-
+        IsClassFor(object, record(object, callerCtx), classObject) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, _, classObject, classOCtx),
+            VarPointsTo(var, _, classObject, _),
             OutOfScopeIn(var, inMeth),
             ObjectIsClass(classObject),
             PotentialAllocationSite(invo, storeVar, object, inMeth).
@@ -677,7 +677,7 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
         VarPointsTo(self, merge(initMethod, initMCtx, invo, callerCtx), object, objectCtx):-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, callerCtx, classObject, classOCtx),
+            VarPointsTo(var, callerCtx, classObject, _),
             IsParentTrans(classObject, parentObject),
             ObjectIsClass(classObject),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
@@ -689,7 +689,7 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
         CallGraph(invo, callerCtx, initMethod, merge(initMethod, initMCtx, invo, callerCtx)) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, callerCtx, classObject, classOCtx),
+            VarPointsTo(var, callerCtx, classObject, _),
             IsParentTrans(classObject, parentObject),
             ObjectIsClass(classObject),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
@@ -701,7 +701,7 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
         Reachable(initMethod, merge(initMethod, initMCtx, invo, callerCtx)) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, callerCtx, classObject, classOCtx),
+            VarPointsTo(var, callerCtx, classObject, _),
             IsParentTrans(classObject, parentObject),
             ObjectIsClass(classObject),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
@@ -713,7 +713,7 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
         VarPointsTo(self, merge(initMethod, initMCtx, invo, callerCtx), object, objectCtx):-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, callerCtx, classObject, classOCtx),
+            VarPointsTo(var, callerCtx, classObject, _),
             IsParentTrans(classObject, parentObject),
             ObjectIsClass(classObject),
             PotentialAllocationSite(invo, storeVar, object, inMeth),
@@ -730,7 +730,7 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
         VarPointsTo(self, merge(initMethod, initMCtx, invo, callerCtx), object, objectCtx):-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, _, classObject, classOCtx),
+            VarPointsTo(var, _, classObject, _),
             OutOfScopeIn(var, inMeth
             IsParentTrans(classObject, parentObject),
             ObjectIsClass(classObject),
@@ -743,7 +743,7 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
         CallGraph(invo, callerCtx, initMethod, merge(initMethod, initMCtx, invo, callerCtx)) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, _, classObject, classOCtx),
+            VarPointsTo(var, _, classObject, _),
             OutOfScopeIn(var, inMeth),
             IsParentTrans(classObject, parentObject),
             ObjectIsClass(classObject),
@@ -756,7 +756,7 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
         Reachable(initMethod, merge(initMethod, initMCtx, invo, callerCtx)) :-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, _, classObject, classOCtx),
+            VarPointsTo(var, _, classObject, _),
             OutOfScopeIn(var, inMeth),
             IsParentTrans(classObject, parentObject),
             ObjectIsClass(classObject),
@@ -769,7 +769,7 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
         VarPointsTo(self, merge(initMethod, initMCtx, invo, callerCtx), object, objectCtx):-
             Reachable(inMeth, callerCtx),
             SCall(var, invo, inMeth),
-            VarPointsTo(var, _, classObject, classOCtx),
+            VarPointsTo(var, _, classObject, _),
             OutOfScopeIn(var, inMeth),
             IsParentTrans(classObject, parentObject),
             ObjectIsClass(classObject),
@@ -812,10 +812,10 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
     }
 
 def getFact(s: Str): #{Move, Alloc, Load,
-  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[List[Str]], SelfVar, ClsVar,
+  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[Str], SelfVar, ClsVar,
   IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
-  ActualReturn, VarPointsTo[List[Str], List[Str]], CallGraph[List[Str]], AttrPointsTo[List[Str]],
-   InterProcAssign[List[Str]], Reachable[List[Str]], OutOfScopeIn} =
+  ActualReturn, VarPointsTo[Str, Str], CallGraph[Str], AttrPointsTo[Str],
+   InterProcAssign[Str], Reachable[Str], OutOfScopeIn} =
     let parts = String.split(s, ", ");
      match parts[0] with {
         case "Move" => Move(parts[1], parts[2]).
@@ -842,30 +842,30 @@ def getFact(s: Str): #{Move, Alloc, Load,
      }
 
 def getFacts(l: List[Str]): #{Move, Alloc, Load,
-  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[List[Str]], SelfVar, ClsVar,
+  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[Str], SelfVar, ClsVar,
   IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
-  ActualReturn, VarPointsTo[List[Str], List[Str]], CallGraph[List[Str]], AttrPointsTo[List[Str]],
-   InterProcAssign[List[Str]], Reachable[List[Str]], OutOfScopeIn} =
+  ActualReturn, VarPointsTo[Str, Str], CallGraph[Str], AttrPointsTo[Str],
+   InterProcAssign[Str], Reachable[Str], OutOfScopeIn} =
     match l with {
         case Nil => #{ }
         case x :: xs => getFact(x) <+> getFacts(xs)
     }
 
 def readMoveFacts(path: Path): Result[#{Move, Alloc, Load,
-  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[List[Str]], SelfVar, ClsVar,
+  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[Str], SelfVar, ClsVar,
   IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
-  ActualReturn, VarPointsTo[List[Str], List[Str]], CallGraph[List[Str]], AttrPointsTo[List[Str]],
-   InterProcAssign[List[Str]], Reachable[List[Str]], OutOfScopeIn},
+  ActualReturn, VarPointsTo[Str, Str], CallGraph[Str], AttrPointsTo[Str],
+   InterProcAssign[Str], Reachable[Str], OutOfScopeIn},
                                   Path.IOError] =
     Result.map(getFacts, Path.readLines(path))
 
 def main(): #{ Move, Alloc, Load,
-  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[List[Str]], SelfVar, ClsVar,
+  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[Str], SelfVar, ClsVar,
   IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
-  ActualReturn, VarPointsTo[List[Str], List[Str]], CallGraph[List[Str]], AttrPointsTo[List[Str]],
-   InterProcAssign[List[Str]], Reachable[List[Str]], OutOfScopeIn} =
+  ActualReturn, VarPointsTo[Str, Str], CallGraph[Str], AttrPointsTo[Str],
+   InterProcAssign[Str], Reachable[Str], OutOfScopeIn} =
     let movePath = Path.new("output.csv");
-    let rules = getRules(listMerge, listRecord, ""::Nil);
+    let rules = getRules(strMerge, strRecord, "");
     match readMoveFacts(movePath) with {
         case Ok(facts) =>
             let result = solve (facts <+> rules);
