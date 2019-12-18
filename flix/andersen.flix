@@ -30,16 +30,17 @@ rel AttrPointsTo[octx](baseO: Str, baseOCtx: octx, attr: Str, object: Str, octx:
 rel InterProcAssign[ctx](to: Str, toCtx: ctx, from: Str, fromCtx: ctx)
 rel Reachable[ctx](meth: Str, ctx: ctx)
 
-def strMerge(_object: Str, _octx: Str, invo: Str, _ctx: Str) : Str = invo
+def _strMerge(_object: Str, _octx: Str, invo: Str, _ctx: Str) : Str = invo
 def _functionMerge(invo: Str, _ctx: Str) : Str = invo
-def strRecord(_object: Str, ctx: Str) : Str = ctx
-def _listMerge(_object: Str, _octx: List[Str], invo: Str, _ctx: List[Str]) : List[Str] = invo::Nil
-def _listRecord(_object: Str, ctx: List[Str]) : List[Str] = ctx
+def _strRecord(_object: Str, ctx: Str) : Str = ctx
+def listMerge(_object: Str, _octx: List[Str], invo: Str, _ctx: List[Str]) : List[Str] = invo::Nil
+def listRecord(_object: Str, ctx: List[Str]) : List[Str] = ctx
 
 def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, empty_ctx : ctx) : #{Move, Alloc, Load,
-  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[Str], SelfVar, ClsVar,
+  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[List[Str]], SelfVar, ClsVar,
   IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
-  ActualReturn, VarPointsTo[Str, Str], CallGraph[Str], AttrPointsTo[Str], InterProcAssign[Str], Reachable[Str], OutOfScopeIn} =  #{
+  ActualReturn, VarPointsTo[List[Str], List[Str]], CallGraph[List[Str]], AttrPointsTo[List[Str]],
+   InterProcAssign[List[Str]], Reachable[List[Str]], OutOfScopeIn} =  #{
     //Standard relations present in all programs
         // using the empty context as the global starting context (here the empty string)
         Reachable("root", empty_ctx).
@@ -811,9 +812,10 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
     }
 
 def getFact(s: Str): #{Move, Alloc, Load,
-  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[Str], SelfVar, ClsVar,
+  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[List[Str]], SelfVar, ClsVar,
   IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
-  ActualReturn, VarPointsTo[Str, Str], CallGraph[Str], AttrPointsTo[Str], InterProcAssign[Str], Reachable[Str], OutOfScopeIn} =
+  ActualReturn, VarPointsTo[List[Str], List[Str]], CallGraph[List[Str]], AttrPointsTo[List[Str]],
+   InterProcAssign[List[Str]], Reachable[List[Str]], OutOfScopeIn} =
     let parts = String.split(s, ", ");
      match parts[0] with {
         case "Move" => Move(parts[1], parts[2]).
@@ -840,27 +842,30 @@ def getFact(s: Str): #{Move, Alloc, Load,
      }
 
 def getFacts(l: List[Str]): #{Move, Alloc, Load,
-  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[Str], SelfVar, ClsVar,
+  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[List[Str]], SelfVar, ClsVar,
   IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
-  ActualReturn, VarPointsTo[Str, Str], CallGraph[Str], AttrPointsTo[Str], InterProcAssign[Str], Reachable[Str], OutOfScopeIn} =
+  ActualReturn, VarPointsTo[List[Str], List[Str]], CallGraph[List[Str]], AttrPointsTo[List[Str]],
+   InterProcAssign[List[Str]], Reachable[List[Str]], OutOfScopeIn} =
     match l with {
         case Nil => #{ }
         case x :: xs => getFact(x) <+> getFacts(xs)
     }
 
 def readMoveFacts(path: Path): Result[#{Move, Alloc, Load,
-  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[Str], SelfVar, ClsVar,
+  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[List[Str]], SelfVar, ClsVar,
   IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
-  ActualReturn, VarPointsTo[Str, Str], CallGraph[Str], AttrPointsTo[Str], InterProcAssign[Str], Reachable[Str], OutOfScopeIn},
+  ActualReturn, VarPointsTo[List[Str], List[Str]], CallGraph[List[Str]], AttrPointsTo[List[Str]],
+   InterProcAssign[List[Str]], Reachable[List[Str]], OutOfScopeIn},
                                   Path.IOError] =
     Result.map(getFacts, Path.readLines(path))
 
 def main(): #{ Move, Alloc, Load,
-  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[Str], SelfVar, ClsVar,
+  Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[List[Str]], SelfVar, ClsVar,
   IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
-  ActualReturn, VarPointsTo[Str, Str], CallGraph[Str], AttrPointsTo[Str], InterProcAssign[Str], Reachable[Str], OutOfScopeIn} =
+  ActualReturn, VarPointsTo[List[Str], List[Str]], CallGraph[List[Str]], AttrPointsTo[List[Str]],
+   InterProcAssign[List[Str]], Reachable[List[Str]], OutOfScopeIn} =
     let movePath = Path.new("output.csv");
-    let rules = getRules(strMerge, strRecord, "");
+    let rules = getRules(listMerge, listRecord, ""::Nil);
     match readMoveFacts(movePath) with {
         case Ok(facts) =>
             let result = solve (facts <+> rules);
