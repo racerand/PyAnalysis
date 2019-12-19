@@ -60,6 +60,9 @@ class CheckersBoard(AbstractBoard):
                 column = x + ((row + 1) % 2)
                 self.board[row][column] = BlackDraught()
                 self.board[row+6][column] = WhiteDraught()
+        self.piece1 = BlackDraught()
+        self.piece2 = BlackDraught()
+
 
 
 # ボードのサブクラス
@@ -84,8 +87,8 @@ class ChessBoard(AbstractBoard):
         self.board[0][5] = WhiteChessBishop()
         self.board[0][6] = WhiteChessKnight()
         self.board[0][7] = WhiteChessRook()
-        testPiece = BlackChessRook()
-        testPiece2 = BlackChessRook()
+        self.piece1 = BlackChessRook()
+        self.piece2 = BlackChessRook()
         for column in range(8):
             self.board[1][column] = BlackChessPawn()
             self.board[6][column] = WhiteChessPawn()
@@ -93,6 +96,9 @@ class ChessBoard(AbstractBoard):
 
 # 駒用の基底クラス
 class Piece(str):
+    def __new__ (Class, name):
+        return super().__new__(Class, name)
+
     __slots__ = ()
 
 
