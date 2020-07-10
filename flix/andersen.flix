@@ -1,3 +1,6 @@
+use Core/Io/File.File;
+use Core/Io/IOError.IOError;
+
 rel Move(to: Str, from: Str)
 rel Alloc(var: Str, object: Str, inMeth: Str)
 rel Load(to: Str, base: Str, attr: Str)
@@ -42,7 +45,7 @@ type alias AllTypes[ctx, octx] = #{Move, Alloc, Load,
     ActualReturn, VarPointsTo[octx, ctx], CallGraph[ctx], AttrPointsTo[octx],
     InterProcAssign[ctx], Reachable[ctx], OutOfScopeIn}
 
-def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, empty_ctx : ctx) : AllTypes[ctx, octx] =  #{
+def getRules[ctx, octx](merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, empty_ctx : ctx) : AllTypes[ctx, octx] =  #{
     //Standard relations present in all programs
     // using the empty context as the global starting context (here the empty string)
     Reachable("root", empty_ctx).
@@ -847,10 +850,10 @@ def getFacts(l: List[Str]): AllTypes[Str, Str] & Impure =
 
 def readMoveFacts(file: File): Result[AllTypes[Str, Str],
                                   IOError] & Impure =
-    Result.map(getFacts, Core/IO/File.readLines(file))
+    Result.map(getFacts, Core/Io/File.readLines(file))
 
 def main(): AllTypes[Str, Str] & Impure =
-    let moveFile = Core/IO/File.new("output.csv");
+    let moveFile = Core/Io/File.new("output.csv");
     let rules = getRules(strMerge, strRecord, "");
     match readMoveFacts(moveFile) {
         case Ok(facts) =>
