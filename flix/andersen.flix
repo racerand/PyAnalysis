@@ -36,6 +36,12 @@ def strRecord(_object: Str, ctx: Str) : Str = ctx
 def _listMerge(_object: Str, _octx: List[Str], invo: Str, _ctx: List[Str]) : List[Str] = invo::Nil
 def _listRecord(_object: Str, ctx: List[Str]) : List[Str] = ctx
 
+type alias AllTypes[octx, ctx] = #{Move, Alloc, Load,
+    Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[octx], SelfVar, ClsVar,
+    IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
+    ActualReturn, VarPointsTo[octx, ctx], CallGraph[ctx], AttrPointsTo[octx],
+    InterProcAssign[ctx], Reachable[ctx], OutOfScopeIn}
+
 def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, empty_ctx : ctx) : #{Move, Alloc, Load,
   Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[Str], SelfVar, ClsVar,
   IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
@@ -817,7 +823,7 @@ def getFact(s: Str): #{Move, Alloc, Load,
   ActualReturn, VarPointsTo[Str, Str], CallGraph[Str], AttrPointsTo[Str],
    InterProcAssign[Str], Reachable[Str], OutOfScopeIn} =
     let parts = String.split(s, ", ");
-     match parts[0] with {
+    match (parts[0]) with {
         case "Move" => Move(parts[1], parts[2]).
         case "Alloc" => Alloc(parts[1], parts[2], parts[3]).
         case "Load" => Load(parts[1], parts[2], parts[3]).
@@ -839,7 +845,7 @@ def getFact(s: Str): #{Move, Alloc, Load,
         case "OutOfScopeIn" => OutOfScopeIn(parts[1], parts[2]).
 
         case _ => ???
-     }
+    }
 
 def getFacts(l: List[Str]): #{Move, Alloc, Load,
   Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[Str], SelfVar, ClsVar,
@@ -851,22 +857,22 @@ def getFacts(l: List[Str]): #{Move, Alloc, Load,
         case x :: xs => getFact(x) <+> getFacts(xs)
     }
 
-def readMoveFacts(path: Path): Result[#{Move, Alloc, Load,
+def readMoveFacts(file: File): Result[#{Move, Alloc, Load,
   Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[Str], SelfVar, ClsVar,
   IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
   ActualReturn, VarPointsTo[Str, Str], CallGraph[Str], AttrPointsTo[Str],
    InterProcAssign[Str], Reachable[Str], OutOfScopeIn},
-                                  Path.IOError] =
-    Result.map(getFacts, Path.readLines(path))
+                                  IOError] =
+    Result.map(getFacts, File.readLines(file))
 
 def main(): #{ Move, Alloc, Load,
   Store, VCall, SCall, ObjectIsFunction, PotentialAllocationSite, ObjectIsClass, IsClassFor[Str], SelfVar, ClsVar,
   IsBaseFor, IsParentFor, IsNewFor, IsParentTrans, FormalArg, ActualArg, FormalReturn,
   ActualReturn, VarPointsTo[Str, Str], CallGraph[Str], AttrPointsTo[Str],
    InterProcAssign[Str], Reachable[Str], OutOfScopeIn} =
-    let movePath = Path.new("output.csv");
+    let moveFile = File.new("output.csv");
     let rules = getRules(strMerge, strRecord, "");
-    match readMoveFacts(movePath) with {
+    match readMoveFacts(moveFile) with {
         case Ok(facts) =>
             let result = solve (facts <+> rules);
             project VarPointsTo result

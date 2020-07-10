@@ -210,5 +210,5 @@ class AndersenAnalysis(ast.NodeVisitor):
 
 rewriteVisitor = RewriteName()
 normalizedAST = rewriteVisitor.visit(ast_node)
-treeDumpFile.write(astpretty.pformat(normalizedAST, show_offsets=False))
+#treeDumpFile.write(astpretty.pformat(normalizedAST, show_offsets=False))
 AndersenAnalysis(rewriteVisitor.unique).visit(normalizedAST)

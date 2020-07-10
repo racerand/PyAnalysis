@@ -1,12 +1,7 @@
 import ast
 import inspect
 
-from graphviz import Source
-
-import tests.constructor_sound_first
-import tests.testScopedNames
 import tests.root_function_with_same_name
-from lib.fuzzingbook.ControlFlow import gen_cfg, to_graph
 
 
 def fib(n, ):
@@ -37,7 +32,6 @@ class RewriteName(ast.NodeTransformer):
         self.namespace_map = {"root": {}}
         self.current_scope_is_class = False
 
-
     def unique_scoped_name(self, name):
         new_name = self.scoped_name(name)
         if not self.current_scope_is_class:
@@ -64,7 +58,6 @@ class RewriteName(ast.NodeTransformer):
         root_function_map = self.gen_unique_name_map(global_names)
         self.namespace_map["root"] = root_function_map
         return self.generic_visit(node)
-
 
     def visit_Assign(self, node):
         new_nodes = self.generic_stmt_visit(node)
@@ -422,6 +415,7 @@ class RewriteName(ast.NodeTransformer):
 def is_constant_value(node):
     return isinstance(node, ast.Name) or isinstance(node, ast.Num) or isinstance(node, ast.Str) \
            or isinstance(node, ast.Bytes) or isinstance(node, ast.NameConstant) or isinstance(node, ast.Constant)
+
 
 if __name__ == '__main__':
     ast_node = ast.parse(inspect.getsource(tests.root_function_with_same_name))
