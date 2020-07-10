@@ -813,46 +813,46 @@ def getRules(merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx) -> octx, e
 
 }
 
-def getFact(s: Str): AllTypes[Str, Str] =
+def getFact(s: Str): AllTypes[Str, Str] & Impure =
     let parts = String.split(s, ", ");
-    match (parts[0]) with {
-        case "Move" => Move(parts[1], parts[2]).
-        case "Alloc" => Alloc(parts[1], parts[2], parts[3]).
-        case "Load" => Load(parts[1], parts[2], parts[3]).
-        case "Store" => Store(parts[1], parts[2], parts[3]).
-        case "VCall" => VCall(parts[1], parts[2], parts[3], parts[4]).
-        case "SCall" => SCall(parts[1], parts[2], parts[3]).
-        case "ObjectIsFunction" => ObjectIsFunction(parts[1]).
-        case "PotentialAllocationSite" => PotentialAllocationSite(parts[1], parts[2], parts[3], parts[4]).
-        case "ObjectIsClass" => ObjectIsClass(parts[1]).
-        case "SelfVar" => SelfVar(parts[1], parts[2]).
-        case "ClsVar" => ClsVar(parts[1], parts[2]).
-        case "IsBaseFor" => IsBaseFor(parts[1], parts[2]).
-        case "IsNewFor" => IsNewFor(parts[1], parts[2]).
+    match (parts[0]) {
+        case "Move" => Move(parts[1] as & Pure, parts[2] as & Pure).
+        case "Alloc" => Alloc(parts[1] as & Pure, parts[2] as & Pure, parts[3] as & Pure).
+        case "Load" => Load(parts[1] as & Pure, parts[2] as & Pure, parts[3] as & Pure).
+        case "Store" => Store(parts[1] as & Pure, parts[2] as & Pure, parts[3] as & Pure).
+        case "VCall" => VCall(parts[1] as & Pure, parts[2] as & Pure, parts[3] as & Pure, parts[4] as & Pure).
+        case "SCall" => SCall(parts[1] as & Pure, parts[2] as & Pure, parts[3] as & Pure).
+        case "ObjectIsFunction" => ObjectIsFunction(parts[1] as & Pure).
+        case "PotentialAllocationSite" => PotentialAllocationSite(parts[1] as & Pure, parts[2] as & Pure, parts[3] as & Pure, parts[4] as & Pure).
+        case "ObjectIsClass" => ObjectIsClass(parts[1] as & Pure).
+        case "SelfVar" => SelfVar(parts[1] as & Pure, parts[2] as & Pure).
+        case "ClsVar" => ClsVar(parts[1] as & Pure, parts[2] as & Pure).
+        case "IsBaseFor" => IsBaseFor(parts[1] as & Pure, parts[2] as & Pure).
+        case "IsNewFor" => IsNewFor(parts[1] as & Pure, parts[2] as & Pure).
 
-        case "FormalArg" => FormalArg(parts[1], parts[2], parts[3]).
-        case "ActualArg" => ActualArg(parts[1], parts[2], parts[3]).
-        case "FormalReturn" => FormalReturn(parts[1], parts[2]).
-        case "ActualReturn" => ActualReturn(parts[1], parts[2]).
-        case "OutOfScopeIn" => OutOfScopeIn(parts[1], parts[2]).
+        case "FormalArg" => FormalArg(parts[1] as & Pure, parts[2] as & Pure, parts[3] as & Pure).
+        case "ActualArg" => ActualArg(parts[1] as & Pure, parts[2] as & Pure, parts[3] as & Pure).
+        case "FormalReturn" => FormalReturn(parts[1] as & Pure, parts[2] as & Pure).
+        case "ActualReturn" => ActualReturn(parts[1] as & Pure, parts[2] as & Pure).
+        case "OutOfScopeIn" => OutOfScopeIn(parts[1] as & Pure, parts[2] as & Pure).
 
         case _ => ???
     }
 
-def getFacts(l: List[Str]): AllTypes[Str, Str] =
-    match l with {
+def getFacts(l: List[Str]): AllTypes[Str, Str] & Impure =
+    match l {
         case Nil => #{ }
         case x :: xs => getFact(x) <+> getFacts(xs)
     }
 
 def readMoveFacts(file: File): Result[AllTypes[Str, Str],
-                                  IOError] =
-    Result.map(getFacts, File.readLines(file))
+                                  IOError] & Impure =
+    Result.map(getFacts, Core/IO/File.readLines(file))
 
-def main(): AllTypes[Str, Str] =
-    let moveFile = File.new("output.csv");
+def main(): AllTypes[Str, Str] & Impure =
+    let moveFile = Core/IO/File.new("output.csv");
     let rules = getRules(strMerge, strRecord, "");
-    match readMoveFacts(moveFile) with {
+    match readMoveFacts(moveFile) {
         case Ok(facts) =>
             let result = solve (facts <+> rules);
             project VarPointsTo result
