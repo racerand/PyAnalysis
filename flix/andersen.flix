@@ -855,6 +855,11 @@ def readMoveFacts(file: File): Result[AllTypes[Str, Str],
 def main(): AllTypes[Str, Str] & Impure =
     let moveFile = Core/Io/File.new("output.csv");
     let rules = getRules(strMerge, strRecord, "");
+    match Core/Io/File.isReadable(moveFile) {
+        case Ok(true) =>
+            ()
+        case _ => Console.print("can't read")
+    };
     match readMoveFacts(moveFile) {
         case Ok(facts) =>
             let result = solve (facts <+> rules);
