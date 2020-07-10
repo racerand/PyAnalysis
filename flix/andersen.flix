@@ -315,6 +315,7 @@ def getRules[ctx, octx](merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx)
         VarPointsTo(clsVar, methCtx, classObject, _),
         // Use Reachable to get the context in which it is allocated
         Reachable(inMeth, methCtx).
+
     // Then for VCall when the call is on a class and we need to look up the transitive and reflective closure
     // of inheritance.
     IsClassFor(object, record(object, methCtx), classObject) :-
@@ -387,7 +388,7 @@ def getRules[ctx, octx](merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx)
         // Use Reachable to get the context in which it is allocated
         Reachable(inMeth, methCtx).
 
-// Then for VCall. When base does not point to anything in the current context, and it refers to a class
+    // Then for VCall. When base does not point to anything in the current context, and it refers to a class
     IsClassFor(object, record(object, methCtx), classObject) :-
         VCall(base, attr, invo, inMeth),
         VarPointsTo(base, _, baseObject, baseOCtx),
@@ -412,6 +413,7 @@ def getRules[ctx, octx](merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx)
         VarPointsTo(clsVar, methCtx, classObject, _),
         // Use Reachable to get the context in which it is allocated
         Reachable(inMeth, methCtx).
+
     // Then for VCall. When base does not point to anything in the current context, and we look at the inherited
     // functions
     IsClassFor(object, record(object, methCtx), classObject) :-
@@ -442,7 +444,7 @@ def getRules[ctx, octx](merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx)
     /* Call the __new__ method of a class if there exist a SCall on the class,
     the next 3 have the same right side */
     // TODO: should do the same for all parent definitions of __new__
-    Reachable(object, merge(classObject, empty_ctx, invo, callerCtx)) :-
+    Reachable(object, merge(classObject, record(classObject, empty_ctx), invo, callerCtx)) :-
         Reachable(inMeth, callerCtx),
         SCall(var, invo, inMeth),
         VarPointsTo(var, callerCtx, classObject, _),
@@ -452,7 +454,7 @@ def getRules[ctx, octx](merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx)
         ObjectIsFunction(object),
         ClsVar(cls, object).
 
-    CallGraph(invo, callerCtx, object, merge(classObject, empty_ctx, invo, callerCtx)) :-
+    CallGraph(invo, callerCtx, object, merge(classObject, record(classObject, empty_ctx), invo, callerCtx)) :-
         Reachable(inMeth, callerCtx),
         SCall(var, invo, inMeth),
         VarPointsTo(var, callerCtx, classObject, _),
@@ -462,7 +464,7 @@ def getRules[ctx, octx](merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx)
         ObjectIsFunction(object),
         ClsVar(cls, object).
 
-    VarPointsTo(cls, merge(classObject, empty_ctx, invo, callerCtx), classObject, empty_ctx) :-
+    VarPointsTo(cls, merge(classObject, record(classObject, empty_ctx), invo, callerCtx), classObject, record(classObject, empty_ctx)) :-
         Reachable(inMeth, callerCtx),
         SCall(var, invo, inMeth),
         VarPointsTo(var, callerCtx, classObject, _),
@@ -475,7 +477,7 @@ def getRules[ctx, octx](merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx)
     /* Call the __new__ method of a class if there exist a SCall on the class,
     the next 3 have the same right side */
     // This time for when var in out of scope in the caller context
-    Reachable(object, merge(classObject, empty_ctx, invo, callerCtx)) :-
+    Reachable(object, merge(classObject, record(classObject, empty_ctx), invo, callerCtx)) :-
         Reachable(inMeth, callerCtx),
         SCall(var, invo, inMeth),
         VarPointsTo(var, _, classObject, _),
@@ -486,7 +488,7 @@ def getRules[ctx, octx](merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx)
         ObjectIsFunction(object),
         ClsVar(cls, object).
 
-    CallGraph(invo, callerCtx, object, merge(classObject, empty_ctx, invo, callerCtx)) :-
+    CallGraph(invo, callerCtx, object, merge(classObject, record(classObject, empty_ctx), invo, callerCtx)) :-
         Reachable(inMeth, callerCtx),
         SCall(var, invo, inMeth),
         VarPointsTo(var, _, classObject, _),
@@ -497,7 +499,7 @@ def getRules[ctx, octx](merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx)
         ObjectIsFunction(object),
         ClsVar(cls, object).
 
-    VarPointsTo(cls, merge(classObject, empty_ctx, invo, callerCtx), classObject, empty_ctx) :-
+    VarPointsTo(cls, merge(classObject, record(classObject, empty_ctx), invo, callerCtx), classObject, record(classObject, empty_ctx)) :-
         Reachable(inMeth, callerCtx),
         SCall(var, invo, inMeth),
         VarPointsTo(var, _, classObject, _),
@@ -510,9 +512,9 @@ def getRules[ctx, octx](merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx)
 
     // Infer call to __init__ on what is returned from __new__
     /* TODO: the calleeCtx not being the exact callee context of this call might be bad
-    CallGraph(invo, callerCtx, initMeth, merge(classObject, empty_ctx, invo, callerCtx)),
-    VarPointsTo(self, merge(classObject, empty_ctx, invo, callerCtx), returnObject, returnOCtx),
-    Reachable(initMeth, merge(classObject, empty_ctx, invo, callerCtx)) :-
+    CallGraph(invo, callerCtx, initMeth, merge(classObject, record(classObject, empty_ctx), invo, callerCtx)),
+    VarPointsTo(self, merge(classObject, record(classObject, empty_ctx), invo, callerCtx), returnObject, returnOCtx),
+    Reachable(initMeth, merge(classObject, record(classObject, empty_ctx), invo, callerCtx)) :-
         SCall(var,invo,inMeth),
         Reachable(inMeth, callerCtx),
         VarPointsTo(var, callerCtx, classObject, _),
@@ -525,7 +527,7 @@ def getRules[ctx, octx](merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx)
         VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
         IsClassFor(returnObject, returnOCtx, clsObject, callerCtx).
     */
-    CallGraph(invo, callerCtx, initMeth, merge(classObject, empty_ctx, invo, callerCtx)) :-
+    CallGraph(invo, callerCtx, initMeth, merge(classObject, record(classObject, empty_ctx), invo, callerCtx)) :-
         SCall(var,invo,inMeth),
         Reachable(inMeth, callerCtx),
         VarPointsTo(var, callerCtx, classObject, _),
@@ -538,7 +540,7 @@ def getRules[ctx, octx](merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx)
         VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
         IsClassFor(returnObject, returnOCtx, clsObject).
 
-    VarPointsTo(self, merge(classObject, empty_ctx, invo, callerCtx), returnObject, returnOCtx) :-
+    VarPointsTo(self, merge(classObject, record(classObject, empty_ctx), invo, callerCtx), returnObject, returnOCtx) :-
         SCall(var,invo,inMeth),
         Reachable(inMeth, callerCtx),
         VarPointsTo(var, callerCtx, classObject, _),
@@ -551,7 +553,7 @@ def getRules[ctx, octx](merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx)
         VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
         IsClassFor(returnObject, returnOCtx, clsObject).
 
-    Reachable(initMeth, merge(classObject, empty_ctx, invo, callerCtx)) :-
+    Reachable(initMeth, merge(classObject, record(classObject, empty_ctx), invo, callerCtx)) :-
         SCall(var,invo,inMeth),
         Reachable(inMeth, callerCtx),
         VarPointsTo(var, callerCtx, classObject, _),
@@ -567,9 +569,9 @@ def getRules[ctx, octx](merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx)
     // Infer call to __init__ on what is returned from __new__
     /* TODO: the calleeCtx not being the exact callee context of this call might be bad
     This one for when var is defined out of scope
-    CallGraph(invo, callerCtx, initMeth, merge(classObject, empty_ctx, invo, callerCtx)),
-    VarPointsTo(self, merge(classObject, empty_ctx, invo, callerCtx), returnObject, returnOCtx),
-    Reachable(initMeth, merge(classObject, empty_ctx, invo, callerCtx)) :-
+    CallGraph(invo, callerCtx, initMeth, merge(classObject, record(classObject, empty_ctx), invo, callerCtx)),
+    VarPointsTo(self, merge(classObject, record(classObject, empty_ctx), invo, callerCtx), returnObject, returnOCtx),
+    Reachable(initMeth, merge(classObject, record(classObject, empty_ctx), invo, callerCtx)) :-
         SCall(var,invo,inMeth),
         Reachable(inMeth, callerCtx),
         VarPointsTo(var, _, classObject, _),
@@ -583,7 +585,7 @@ def getRules[ctx, octx](merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx)
         VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
         IsClassFor(returnObject, returnOCtx, clsObject).
     */
-    CallGraph(invo, callerCtx, initMeth, merge(classObject, empty_ctx, invo, callerCtx)) :-
+    CallGraph(invo, callerCtx, initMeth, merge(classObject, record(classObject, empty_ctx), invo, callerCtx)) :-
         SCall(var,invo,inMeth),
         Reachable(inMeth, callerCtx),
         VarPointsTo(var, _, classObject, _),
@@ -597,7 +599,7 @@ def getRules[ctx, octx](merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx)
         VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
         IsClassFor(returnObject, returnOCtx, clsObject).
 
-    VarPointsTo(self, merge(classObject, empty_ctx, invo, callerCtx), returnObject, returnOCtx) :-
+    VarPointsTo(self, merge(classObject, record(classObject, empty_ctx), invo, callerCtx), returnObject, returnOCtx) :-
         SCall(var,invo,inMeth),
         Reachable(inMeth, callerCtx),
         VarPointsTo(var, _, classObject, _),
@@ -611,7 +613,7 @@ def getRules[ctx, octx](merge: (Str, octx, Str, ctx) -> ctx, record : (Str, ctx)
         VarPointsTo(cls, calleeCtx, clsObject, clsOCtx),
         IsClassFor(returnObject, returnOCtx, clsObject).
 
-    Reachable(initMeth, merge(classObject, empty_ctx, invo, callerCtx)) :-
+    Reachable(initMeth, merge(classObject, record(classObject, empty_ctx), invo, callerCtx)) :-
         SCall(var,invo,inMeth),
         Reachable(inMeth, callerCtx),
         VarPointsTo(var, _, classObject, _),
@@ -863,6 +865,6 @@ def main(): AllTypes[Str, Str] & Impure =
     match readMoveFacts(moveFile) {
         case Ok(facts) =>
             let result = solve (facts <+> rules);
-            project VarPointsTo result
+            (project AttrPointsTo result) <+> (project VarPointsTo result)
         case Err(_) => ??? // implement proper error handling.
     }
